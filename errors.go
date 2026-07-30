@@ -73,6 +73,7 @@ const (
 	CodeNotFound             = "NOT_FOUND"
 	CodeValidationError      = "VALIDATION_ERROR"
 	CodeBadRequest           = "BAD_REQUEST"
+	CodePayloadTooLarge      = "PAYLOAD_TOO_LARGE"
 	CodeConflict             = "CONFLICT"
 	CodeRateLimited          = "RATE_LIMITED"
 	CodeMonthlyLimitExceeded = "MONTHLY_LIMIT_EXCEEDED"
