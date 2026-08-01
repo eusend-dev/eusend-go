@@ -7,9 +7,12 @@ import (
 
 // DnsRecord is a DNS entry to publish for a domain.
 type DnsRecord struct {
-	Type  string `json:"type"`
-	Name  string `json:"name"`
-	Value string `json:"value"`
+	Type        string `json:"type"`
+	Name        string `json:"name"`
+	Value       string `json:"value"`
+	Priority    int    `json:"priority,omitempty"`    // MX records only
+	Purpose     string `json:"purpose,omitempty"`     // authentication | policy | alignment
+	Description string `json:"description,omitempty"`
 }
 
 // CreateDomainRequest is the request object for Domains.Create.
@@ -19,11 +22,14 @@ type CreateDomainRequest struct {
 
 // CreateDomainResponse is returned by Domains.Create and carries the DNS records to add.
 type CreateDomainResponse struct {
-	Id    string    `json:"id"`
-	Name  string    `json:"name"`
-	Dkim  DnsRecord `json:"dkim"`
-	Spf   DnsRecord `json:"spf"`
-	Dmarc DnsRecord `json:"dmarc"`
+	Id   string `json:"id"`
+	Name string `json:"name"`
+	// Records is every record to publish, in presentation order. Prefer it over the
+	// individual fields below — it is the only place the optional Return-Path
+	// alignment records appear.
+	Records []DnsRecord `json:"records"`
+	Dkim    DnsRecord   `json:"dkim"`
+	Dmarc   DnsRecord   `json:"dmarc"`
 }
 
 // DomainListItem is a row from Domains.List.
