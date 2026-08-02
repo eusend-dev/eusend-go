@@ -5,23 +5,38 @@ import (
 	"net/http"
 )
 
+// What a key may reach: PermissionFullAccess for every resource,
+// PermissionSendingAccess for sending email only.
+const (
+	PermissionFullAccess    = "full_access"
+	PermissionSendingAccess = "sending_access"
+)
+
 // CreateApiKeyRequest is the request object for ApiKeys.Create.
 type CreateApiKeyRequest struct {
 	Name string `json:"name"`
 	// TestMode issues a sandbox key. Emails sent with a test key are accepted
 	// and tracked but never delivered.
 	TestMode bool `json:"test_mode"`
+	// Permission defaults to PermissionFullAccess when empty.
+	Permission string `json:"permission,omitempty"`
+	// DomainId restricts the key to sending from a single domain. Only valid
+	// alongside PermissionSendingAccess; leave empty for any verified domain.
+	DomainId string `json:"domain_id,omitempty"`
 }
 
 // CreateApiKeyResponse is returned by ApiKeys.Create. Key holds the full secret
 // and is returned only once — store it securely.
 type CreateApiKeyResponse struct {
-	Id        string `json:"id"`
-	Name      string `json:"name"`
-	Key       string `json:"key"`
-	Prefix    string `json:"prefix"`
-	TestMode  bool   `json:"test_mode"`
-	CreatedAt string `json:"created_at"`
+	Id         string `json:"id"`
+	Name       string `json:"name"`
+	Key        string `json:"key"`
+	Prefix     string `json:"prefix"`
+	TestMode   bool   `json:"test_mode"`
+	Permission string `json:"permission"`
+	DomainId   string `json:"domain_id"`
+	DomainName string `json:"domain_name"`
+	CreatedAt  string `json:"created_at"`
 }
 
 // ApiKey is a row from ApiKeys.List. The full key is never returned after creation.
@@ -30,6 +45,9 @@ type ApiKey struct {
 	Name       string `json:"name"`
 	Prefix     string `json:"prefix"`
 	TestMode   bool   `json:"test_mode"`
+	Permission string `json:"permission"`
+	DomainId   string `json:"domain_id"`
+	DomainName string `json:"domain_name"`
 	CreatedAt  string `json:"created_at"`
 	LastUsedAt string `json:"last_used_at"`
 }

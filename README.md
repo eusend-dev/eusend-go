@@ -184,6 +184,21 @@ client.ApiKeys.Remove(key.Id)
 
 Emails sent with a test key are accepted and tracked but never delivered.
 
+`Permission` defaults to `PermissionFullAccess` — every resource. `PermissionSendingAccess`
+limits the key to sending email (plus rescheduling and canceling a scheduled send); every
+other endpoint, including reading email logs, returns `403 FORBIDDEN`. Such a key can also
+be pinned to one sending domain with `DomainId`, which is rejected on a full-access key.
+
+```go
+client.ApiKeys.Create(&eusend.CreateApiKeyRequest{
+	Name:       "Billing service",
+	Permission: eusend.PermissionSendingAccess,
+	DomainId:   domainId, // omit for any verified domain
+})
+```
+
+Deleting a domain revokes every key restricted to it.
+
 ---
 
 ## Audiences & contacts
