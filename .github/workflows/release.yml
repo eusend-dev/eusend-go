@@ -1,0 +1,66 @@
+name: release
+
+# Go has no upload step — the module proxy reads tags straight off this repo, so pushing a
+# `v*` tag IS the release. Tags are made from the eusend monorepo with
+# `bun run sdk:release go patch`, which bumps the `version` const before tagging.
+#
+# This workflow exists because the tag being the release means nothing validates it. That is
+# how this repo spent two releases serving v0.1.1 from a tree whose `version` const said 0.3.0:
+# the code was pushed to main, the tag was never made, and `go get @latest` quietly resolved to
+# months-old code. Nothing surfaced it.
+#
+# Note what this can and cannot do: it runs after the tag is already pushed, and a tag the
+# module proxy has fetched is immutable. So it cannot block a bad release — it can only make
+# one loud instead of silent, so the fix goes out as a patch the same day.
+
+on:
+  push:
+    tags: ['v*']
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      - name: Tag must match the version const
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          const=$(sed -n 's/^\tversion[[:space:]]*= "\(.*\)"$/\1/p' eusend.go)
+
+          if [ -z "$const" ]; then
+            echo "::error::no version const found in eusend.go"
+            exit 1
+          fi
+          if [ "$const" != "$tag" ]; then
+            echo "::error::eusend.go says $const, tag says $tag — the User-Agent will misreport"
+            exit 1
+          fi
+          echo "version const $const matches tag"
+
+      - run: go vet ./...
+      - run: go test ./...
+
+      # Asking the proxy for the version is what makes it fetch and cache it. Without this the
+      # first `go get` after a release pays the fetch, and `@latest` can lag by minutes.
+      - name: Warm the module proxy
+        run: |
+          url="https://proxy.golang.org/github.com/eusend-dev/eusend-go/@v/${GITHUB_REF_NAME}.info"
+          for attempt in 1 2 3 4 5; do
+            if curl -fsS "$url"; then
+              echo "proxy has ${GITHUB_REF_NAME}"
+              exit 0
+            fi
+            echo "attempt $attempt: proxy not ready, retrying"
+            sleep 10
+          done
+          # Not fatal: the tag is pushed and valid, the proxy will pick it up on its own.
+          echo "::warning::proxy did not serve ${GITHUB_REF_NAME} within 50s"
