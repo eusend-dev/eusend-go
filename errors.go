@@ -81,6 +81,8 @@ const (
 	CodePlanLimitExceeded    = "PLAN_LIMIT_EXCEEDED"
 	CodeDomainNotVerified    = "DOMAIN_NOT_VERIFIED"
 	CodeSendingSuspended     = "SENDING_SUSPENDED"
+	CodeListSendHeld         = "LIST_SEND_HELD"
+	CodeBroadcastHeld        = "BROADCAST_HELD"
 	CodeAllSuppressed        = "ALL_SUPPRESSED"
 	CodeAttachmentStorageErr = "ATTACHMENT_STORAGE_ERROR"
 	CodeServicePaused        = "SERVICE_PAUSED"

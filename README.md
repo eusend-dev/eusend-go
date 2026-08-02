@@ -354,6 +354,8 @@ populated from the response headers.
 | `CodePlanLimitExceeded` | `PLAN_LIMIT_EXCEEDED` | 403 |
 | `CodeDomainNotVerified` | `DOMAIN_NOT_VERIFIED` | 403 |
 | `CodeSendingSuspended` | `SENDING_SUSPENDED` | 403 |
+| `CodeListSendHeld` | `LIST_SEND_HELD` | 403 |
+| `CodeBroadcastHeld` | `BROADCAST_HELD` | 403 |
 | `CodeAllSuppressed` | `ALL_SUPPRESSED` | 422 |
 | `CodeServicePaused` | `SERVICE_PAUSED` | 503 |
 | `CodeInternalError` | `INTERNAL_ERROR` | 500 |
