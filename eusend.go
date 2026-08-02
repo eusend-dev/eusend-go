@@ -24,7 +24,7 @@ import (
 )
 
 const (
-	version     = "0.2.0"
+	version     = "0.3.0"
 	userAgent   = "eusend-go/" + version
 	contentType = "application/json"
 )
@@ -47,14 +47,15 @@ type Client struct {
 	UserAgent string
 	headers   map[string]string
 
-	Emails     EmailsSvc
-	Batch      BatchSvc
-	ApiKeys    ApiKeysSvc
-	Domains    DomainsSvc
-	Audiences  AudiencesSvc
-	Templates  TemplatesSvc
-	Webhooks   WebhooksSvc
-	Broadcasts BroadcastsSvc
+	Emails       EmailsSvc
+	Batch        BatchSvc
+	ApiKeys      ApiKeysSvc
+	Domains      DomainsSvc
+	Audiences    AudiencesSvc
+	Templates    TemplatesSvc
+	Webhooks     WebhooksSvc
+	Broadcasts   BroadcastsSvc
+	Suppressions SuppressionsSvc
 }
 
 // NewClient creates a Client with the given API key. If apiKey is empty, the
@@ -89,6 +90,7 @@ func NewCustomClient(httpClient *http.Client, apiKey string) *Client {
 	c.Templates = &TemplatesSvcImpl{client: c}
 	c.Webhooks = &WebhooksSvcImpl{client: c}
 	c.Broadcasts = &BroadcastsSvcImpl{client: c}
+	c.Suppressions = &SuppressionsSvcImpl{client: c}
 	return c
 }
 
@@ -155,6 +157,27 @@ func (c *Client) Perform(req *http.Request, ret any) (*http.Response, error) {
 		}
 	}
 	return resp, nil
+}
+
+// PerformRaw sends req and returns the raw 2xx body. Used for the endpoints that answer
+// with something other than JSON (the suppression list export is CSV), where Perform's
+// decode step would reject a perfectly good response.
+func (c *Client) PerformRaw(req *http.Request) ([]byte, error) {
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return nil, &Error{Message: "network request failed: the request could not be resolved", Code: CodeApplicationError}
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return nil, handleError(resp)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, &Error{Message: "failed to read response: " + err.Error(), Code: CodeApplicationError, StatusCode: resp.StatusCode}
+	}
+	return body, nil
 }
 
 func getEnv(key, fallback string) string {

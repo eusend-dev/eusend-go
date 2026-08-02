@@ -220,6 +220,45 @@ client.Audiences.Remove(audience.Id)
 
 ---
 
+## Suppressions
+
+Addresses the account will not send to. Hard bounces and spam complaints are added
+automatically; these methods cover the ones you manage yourself. A send to a suppressed
+address is skipped and recorded with status `suppressed`; if every recipient is
+suppressed the send fails with `ALL_SUPPRESSED`.
+
+Test-mode keys can read the list but not modify it.
+
+```go
+// Everything suppressed for a hard bounce, or at one domain
+page, _ := client.Suppressions.List(&eusend.ListSuppressionsOptions{
+	Reason: eusend.SuppressionReasonBounce, Limit: 50,
+})
+client.Suppressions.List(&eusend.ListSuppressionsOptions{Email: "@acme.com"})
+
+// Suppress an address. Already suppressed? The existing entry comes back unchanged —
+// a manual add never rewrites a real bounce or complaint.
+client.Suppressions.Create(&eusend.CreateSuppressionRequest{Email: "opted-out@example.com"})
+
+// Import up to 1,000 at a time — do this before your first send when migrating, so
+// addresses that already bounced elsewhere don't get a fresh attempt from a new IP.
+res, _ := client.Suppressions.Import([]*eusend.SuppressionImportItem{
+	{Email: "one@example.com"},
+	{Email: "two@example.com", Reason: eusend.SuppressionReasonComplaint},
+})
+fmt.Println(res.Count, res.AlreadySuppressed, res.Duplicates)
+
+// Un-suppress by entry id or by address
+client.Suppressions.Remove("invalid@example.com")
+
+// The whole list as CSV
+csv, _ := client.Suppressions.Export()
+
+_ = page
+```
+
+---
+
 ## Templates
 
 `{{variable}}` placeholders are substituted at send time; values are HTML-escaped.
