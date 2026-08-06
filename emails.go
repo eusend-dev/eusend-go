@@ -31,17 +31,22 @@ type Attachment struct {
 type SendEmailRequest struct {
 	// From accepts a bare email ("you@yourdomain.com") or a display-name form
 	// ("Acme <you@yourdomain.com>"). The domain must be verified on your account.
-	From        string            `json:"from"`
-	To          []string          `json:"to"`
-	Subject     string            `json:"subject,omitempty"`
-	Bcc         []string          `json:"bcc,omitempty"`
-	Cc          []string          `json:"cc,omitempty"`
-	ReplyTo     []string          `json:"reply_to,omitempty"`
-	Html        string            `json:"html,omitempty"`
-	Text        string            `json:"text,omitempty"`
-	TemplateId  string            `json:"template_id,omitempty"`
-	Variables   map[string]any    `json:"variables,omitempty"`
-	Headers     map[string]string `json:"headers,omitempty"`
+	From       string            `json:"from"`
+	To         []string          `json:"to"`
+	Subject    string            `json:"subject,omitempty"`
+	Bcc        []string          `json:"bcc,omitempty"`
+	Cc         []string          `json:"cc,omitempty"`
+	ReplyTo    []string          `json:"reply_to,omitempty"`
+	Html       string            `json:"html,omitempty"`
+	Text       string            `json:"text,omitempty"`
+	TemplateId string            `json:"template_id,omitempty"`
+	Variables  map[string]any    `json:"variables,omitempty"`
+	Headers    map[string]string `json:"headers,omitempty"`
+	// Tags label a send for log filtering and webhook routing, e.g.
+	// {"category": "password_reset"}. Names and values may contain ASCII letters,
+	// numbers, underscores and dashes; up to 10 tags per email. They are returned
+	// on every email.* webhook event for this send.
+	Tags        map[string]string `json:"tags,omitempty"`
 	TrackOpens  *bool             `json:"track_opens,omitempty"`
 	TrackClicks *bool             `json:"track_clicks,omitempty"`
 	Attachments []*Attachment     `json:"attachments,omitempty"`
@@ -85,32 +90,34 @@ type EmailEvent struct {
 
 // Email is the response from Emails.Get.
 type Email struct {
-	Id          string       `json:"id"`
-	From        string       `json:"from"`
-	To          []string     `json:"to"`
-	Cc          []string     `json:"cc"`
-	Bcc         []string     `json:"bcc"`
-	ReplyTo     []string     `json:"replyTo"`
-	Subject     string       `json:"subject"`
-	Html        string       `json:"html"`
-	Text        string       `json:"text"`
-	Status      string       `json:"status"`
-	TestMode    bool         `json:"testMode"`
-	TemplateId  string       `json:"templateId"`
-	ScheduledAt string       `json:"scheduledAt"`
-	CreatedAt   string       `json:"createdAt"`
-	Events      []EmailEvent `json:"events"`
+	Id          string            `json:"id"`
+	From        string            `json:"from"`
+	To          []string          `json:"to"`
+	Cc          []string          `json:"cc"`
+	Bcc         []string          `json:"bcc"`
+	ReplyTo     []string          `json:"replyTo"`
+	Subject     string            `json:"subject"`
+	Html        string            `json:"html"`
+	Text        string            `json:"text"`
+	Status      string            `json:"status"`
+	Tags        map[string]string `json:"tags"`
+	TestMode    bool              `json:"testMode"`
+	TemplateId  string            `json:"templateId"`
+	ScheduledAt string            `json:"scheduledAt"`
+	CreatedAt   string            `json:"createdAt"`
+	Events      []EmailEvent      `json:"events"`
 }
 
 // EmailListItem is a row from Emails.List.
 type EmailListItem struct {
-	Id        string   `json:"id"`
-	From      string   `json:"from"`
-	To        []string `json:"to"`
-	Subject   string   `json:"subject"`
-	Status    string   `json:"status"`
-	TestMode  bool     `json:"testMode"`
-	CreatedAt string   `json:"createdAt"`
+	Id        string            `json:"id"`
+	From      string            `json:"from"`
+	To        []string          `json:"to"`
+	Subject   string            `json:"subject"`
+	Status    string            `json:"status"`
+	Tags      map[string]string `json:"tags"`
+	TestMode  bool              `json:"testMode"`
+	CreatedAt string            `json:"createdAt"`
 }
 
 // ListEmailsResponse is the response from Emails.List.
@@ -126,6 +133,9 @@ type ListEmailsOptions struct {
 	Status string
 	From   string
 	To     string
+	// Tags filters by tag. "category:password_reset" matches that exact pair; a bare
+	// "category" matches any email carrying the tag. Several entries are ANDed.
+	Tags []string
 }
 
 // EmailsSvc is the /emails API.
@@ -196,6 +206,7 @@ func (s *EmailsSvcImpl) List(options *ListEmailsOptions) (*ListEmailsResponse, e
 
 func (s *EmailsSvcImpl) ListWithContext(ctx context.Context, options *ListEmailsOptions) (*ListEmailsResponse, error) {
 	q := map[string]string{}
+	repeated := map[string][]string{}
 	if options != nil {
 		if options.Limit > 0 {
 			q["limit"] = itoa(options.Limit)
@@ -204,8 +215,9 @@ func (s *EmailsSvcImpl) ListWithContext(ctx context.Context, options *ListEmails
 		q["status"] = options.Status
 		q["from"] = options.From
 		q["to"] = options.To
+		repeated["tag"] = options.Tags
 	}
-	req, err := s.client.NewRequest(ctx, http.MethodGet, "emails"+queryString(q), nil)
+	req, err := s.client.NewRequest(ctx, http.MethodGet, "emails"+queryStringWith(q, repeated), nil)
 	if err != nil {
 		return nil, ErrFailedToCreateRequest
 	}
