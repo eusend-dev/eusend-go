@@ -68,7 +68,7 @@ Optional pointer fields (`*bool`, `*string`) have helpers: `eusend.Bool(true)`, 
 | `TemplateId` | `string` | Saved template. |
 | `Variables` | `map[string]any` | Template substitutions (HTML-escaped). |
 | `Headers` | `map[string]string` | No line breaks in names or values. |
-| `TrackOpens` / `TrackClicks` | `*bool` | Default `true`; `eusend.Bool(false)` to disable. |
+| `TrackOpens` / `TrackClicks` | `*bool` | Nil uses your organization default (Settings → General → Email tracking); `eusend.Bool(false)` to disable. |
 | `Attachments` | `[]*Attachment` | Up to 20, 10 MB combined. |
 | `ScheduledAt` | `string` | Future send, ≤ 30 days. |
 

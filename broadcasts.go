@@ -15,6 +15,10 @@ type CreateBroadcastRequest struct {
 	Html              string            `json:"html,omitempty"`
 	TemplateId        string            `json:"template_id,omitempty"`
 	TemplateVariables map[string]string `json:"template_variables,omitempty"`
+	// TrackOpens/TrackClicks are pointers so that an explicit false is sent rather than
+	// dropped by omitempty. Nil means "use the organization default".
+	TrackOpens  *bool `json:"track_opens,omitempty"`
+	TrackClicks *bool `json:"track_clicks,omitempty"`
 }
 
 // UpdateBroadcastRequest updates a broadcast. Empty/nil fields are left unchanged.
@@ -27,6 +31,9 @@ type UpdateBroadcastRequest struct {
 	TemplateId        *string           `json:"template_id,omitempty"`
 	TemplateVariables map[string]string `json:"template_variables,omitempty"`
 	ScheduledAt       *string           `json:"scheduled_at,omitempty"`
+	// Nil leaves the broadcast's current setting unchanged.
+	TrackOpens  *bool `json:"track_opens,omitempty"`
+	TrackClicks *bool `json:"track_clicks,omitempty"`
 }
 
 // SendBroadcastRequest sends or schedules a broadcast.
@@ -47,6 +54,8 @@ type Broadcast struct {
 	TemplateId        string            `json:"templateId"`
 	TemplateVariables map[string]string `json:"templateVariables"`
 	ScheduledAt       string            `json:"scheduledAt"`
+	TrackOpens        bool              `json:"trackOpens"`
+	TrackClicks       bool              `json:"trackClicks"`
 	RecipientCount    int               `json:"recipientCount"`
 	SentCount         int               `json:"sentCount"`
 	StartedAt         string            `json:"startedAt"`
