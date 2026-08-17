@@ -59,18 +59,18 @@ Optional pointer fields (`*bool`, `*string`) have helpers: `eusend.Bool(true)`, 
 
 `From` and `To` are required; provide at least one of `Html`, `Text`, or `TemplateId`.
 
-| Field | Type | Notes |
-|-------|------|-------|
-| `From` | `string` | Verified domain; bare or display-name form. |
-| `To` `Cc` `Bcc` `ReplyTo` | `[]string` | Max 50 each. |
-| `Subject` | `string` | |
-| `Html` / `Text` | `string` | |
-| `TemplateId` | `string` | Saved template. |
-| `Variables` | `map[string]any` | Template substitutions (HTML-escaped). |
-| `Headers` | `map[string]string` | No line breaks in names or values. |
-| `TrackOpens` / `TrackClicks` | `*bool` | Nil uses your organization default (Settings → General → Email tracking); `eusend.Bool(false)` to disable. |
-| `Attachments` | `[]*Attachment` | Up to 20, 10 MB combined. |
-| `ScheduledAt` | `string` | Future send, ≤ 30 days. |
+| Field                        | Type                | Notes                                                                                                      |
+| ---------------------------- | ------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `From`                       | `string`            | Verified domain; bare or display-name form.                                                                |
+| `To` `Cc` `Bcc` `ReplyTo`    | `[]string`          | Max 50 each.                                                                                               |
+| `Subject`                    | `string`            |                                                                                                            |
+| `Html` / `Text`              | `string`            |                                                                                                            |
+| `TemplateId`                 | `string`            | Saved template.                                                                                            |
+| `Variables`                  | `map[string]any`    | Template substitutions (HTML-escaped).                                                                     |
+| `Headers`                    | `map[string]string` | No line breaks in names or values.                                                                         |
+| `TrackOpens` / `TrackClicks` | `*bool`             | Nil uses your organization default (Settings → General → Email tracking); `eusend.Bool(false)` to disable. |
+| `Attachments`                | `[]*Attachment`     | Up to 20, 10 MB combined.                                                                                  |
+| `ScheduledAt`                | `string`            | Future send, ≤ 30 days.                                                                                    |
 
 ### Attachments
 
@@ -394,26 +394,26 @@ if err != nil {
 On a `429`, `apiErr.RetryAfter`, `RateLimitReset`, and `RateLimitRemaining` are
 populated from the response headers.
 
-| Code constant | Wire value | Status |
-|---------------|-----------|--------|
-| `CodeUnauthorized` | `UNAUTHORIZED` | 401 |
-| `CodeForbidden` | `FORBIDDEN` | 403 |
-| `CodeNotFound` | `NOT_FOUND` | 404 |
-| `CodeValidationError` | `VALIDATION_ERROR` | 400 |
-| `CodeBadRequest` | `BAD_REQUEST` | 400 |
-| `CodeConflict` | `CONFLICT` | 409 |
-| `CodeRateLimited` | `RATE_LIMITED` | 429 |
-| `CodeMonthlyLimitExceeded` | `MONTHLY_LIMIT_EXCEEDED` | 429 |
-| `CodeDailyLimitExceeded` | `DAILY_LIMIT_EXCEEDED` | 429 |
-| `CodePlanLimitExceeded` | `PLAN_LIMIT_EXCEEDED` | 403 |
-| `CodeDomainNotVerified` | `DOMAIN_NOT_VERIFIED` | 403 |
-| `CodeSendingSuspended` | `SENDING_SUSPENDED` | 403 |
-| `CodeListSendHeld` | `LIST_SEND_HELD` | 403 |
-| `CodeBroadcastHeld` | `BROADCAST_HELD` | 403 |
-| `CodeAllSuppressed` | `ALL_SUPPRESSED` | 422 |
-| `CodeServicePaused` | `SERVICE_PAUSED` | 503 |
-| `CodeInternalError` | `INTERNAL_ERROR` | 500 |
-| `CodeApplicationError` | `application_error` | — (network failure) |
+| Code constant              | Wire value               | Status              |
+| -------------------------- | ------------------------ | ------------------- |
+| `CodeUnauthorized`         | `UNAUTHORIZED`           | 401                 |
+| `CodeForbidden`            | `FORBIDDEN`              | 403                 |
+| `CodeNotFound`             | `NOT_FOUND`              | 404                 |
+| `CodeValidationError`      | `VALIDATION_ERROR`       | 400                 |
+| `CodeBadRequest`           | `BAD_REQUEST`            | 400                 |
+| `CodeConflict`             | `CONFLICT`               | 409                 |
+| `CodeRateLimited`          | `RATE_LIMITED`           | 429                 |
+| `CodeMonthlyLimitExceeded` | `MONTHLY_LIMIT_EXCEEDED` | 429                 |
+| `CodeDailyLimitExceeded`   | `DAILY_LIMIT_EXCEEDED`   | 429                 |
+| `CodePlanLimitExceeded`    | `PLAN_LIMIT_EXCEEDED`    | 403                 |
+| `CodeDomainNotVerified`    | `DOMAIN_NOT_VERIFIED`    | 403                 |
+| `CodeSendingSuspended`     | `SENDING_SUSPENDED`      | 403                 |
+| `CodeListSendHeld`         | `LIST_SEND_HELD`         | 403                 |
+| `CodeBroadcastHeld`        | `BROADCAST_HELD`         | 403                 |
+| `CodeAllSuppressed`        | `ALL_SUPPRESSED`         | 422                 |
+| `CodeServicePaused`        | `SERVICE_PAUSED`         | 503                 |
+| `CodeInternalError`        | `INTERNAL_ERROR`         | 500                 |
+| `CodeApplicationError`     | `application_error`      | — (network failure) |
 
 ---
 
