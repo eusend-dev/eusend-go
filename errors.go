@@ -67,27 +67,30 @@ func handleError(resp *http.Response) error {
 
 // Error codes returned by the API. CodeApplicationError is SDK-only and signals
 // that the request never reached the server (network failure, DNS, timeout).
+// CodeRecipientDomainUndeliverable means a recipient's domain publishes no mail
+// exchanger, so the message could never be delivered — usually a typo.
 const (
-	CodeUnauthorized         = "UNAUTHORIZED"
-	CodeForbidden            = "FORBIDDEN"
-	CodeNotFound             = "NOT_FOUND"
-	CodeValidationError      = "VALIDATION_ERROR"
-	CodeBadRequest           = "BAD_REQUEST"
-	CodePayloadTooLarge      = "PAYLOAD_TOO_LARGE"
-	CodeConflict             = "CONFLICT"
-	CodeRateLimited          = "RATE_LIMITED"
-	CodeMonthlyLimitExceeded = "MONTHLY_LIMIT_EXCEEDED"
-	CodeDailyLimitExceeded   = "DAILY_LIMIT_EXCEEDED"
-	CodePlanLimitExceeded    = "PLAN_LIMIT_EXCEEDED"
-	CodeDomainNotVerified    = "DOMAIN_NOT_VERIFIED"
-	CodeSendingSuspended     = "SENDING_SUSPENDED"
-	CodeListSendHeld         = "LIST_SEND_HELD"
-	CodeBroadcastHeld        = "BROADCAST_HELD"
-	CodeAllSuppressed        = "ALL_SUPPRESSED"
-	CodeAttachmentStorageErr = "ATTACHMENT_STORAGE_ERROR"
-	CodeServicePaused        = "SERVICE_PAUSED"
-	CodeInternalError        = "INTERNAL_ERROR"
-	CodeApplicationError     = "application_error"
+	CodeUnauthorized                 = "UNAUTHORIZED"
+	CodeForbidden                    = "FORBIDDEN"
+	CodeNotFound                     = "NOT_FOUND"
+	CodeValidationError              = "VALIDATION_ERROR"
+	CodeBadRequest                   = "BAD_REQUEST"
+	CodePayloadTooLarge              = "PAYLOAD_TOO_LARGE"
+	CodeConflict                     = "CONFLICT"
+	CodeRateLimited                  = "RATE_LIMITED"
+	CodeMonthlyLimitExceeded         = "MONTHLY_LIMIT_EXCEEDED"
+	CodeDailyLimitExceeded           = "DAILY_LIMIT_EXCEEDED"
+	CodePlanLimitExceeded            = "PLAN_LIMIT_EXCEEDED"
+	CodeDomainNotVerified            = "DOMAIN_NOT_VERIFIED"
+	CodeSendingSuspended             = "SENDING_SUSPENDED"
+	CodeListSendHeld                 = "LIST_SEND_HELD"
+	CodeBroadcastHeld                = "BROADCAST_HELD"
+	CodeAllSuppressed                = "ALL_SUPPRESSED"
+	CodeRecipientDomainUndeliverable = "RECIPIENT_DOMAIN_UNDELIVERABLE"
+	CodeAttachmentStorageErr         = "ATTACHMENT_STORAGE_ERROR"
+	CodeServicePaused                = "SERVICE_PAUSED"
+	CodeInternalError                = "INTERNAL_ERROR"
+	CodeApplicationError             = "application_error"
 )
 
 // Sentinel errors returned when a request object cannot be constructed.
