@@ -45,21 +45,27 @@ type SendBroadcastRequest struct {
 // Broadcast is returned by Broadcasts.Create/Update/Cancel and (with stats) Get.
 type Broadcast struct {
 	Id                string            `json:"id"`
+	OrganizationId    string            `json:"organizationId"`
 	Name              string            `json:"name"`
 	Status            string            `json:"status"`
-	AudienceId        string            `json:"audienceId"`
+	AudienceId        *string           `json:"audienceId"`
 	FromAddress       string            `json:"fromAddress"`
+	ReplyTo           *string           `json:"replyTo"`
 	Subject           string            `json:"subject"`
-	Html              string            `json:"html"`
-	TemplateId        string            `json:"templateId"`
+	Html              *string           `json:"html"`
+	ReactSource       *string           `json:"reactSource"`
+	EditorJson        map[string]any    `json:"editorJson"`
+	TemplateId        *string           `json:"templateId"`
 	TemplateVariables map[string]string `json:"templateVariables"`
-	ScheduledAt       string            `json:"scheduledAt"`
+	HeldReason        *string           `json:"heldReason"`
+	ScheduledAt       *string           `json:"scheduledAt"`
 	TrackOpens        bool              `json:"trackOpens"`
 	TrackClicks       bool              `json:"trackClicks"`
 	RecipientCount    int               `json:"recipientCount"`
 	SentCount         int               `json:"sentCount"`
-	StartedAt         string            `json:"startedAt"`
-	CompletedAt       string            `json:"completedAt"`
+	StartedAt         *string           `json:"startedAt"`
+	CompletedAt       *string           `json:"completedAt"`
+	// Stats is populated only by Broadcasts.Get.
 	Stats             map[string]int    `json:"stats"`
 	CreatedAt         string            `json:"createdAt"`
 	UpdatedAt         string            `json:"updatedAt"`
@@ -70,23 +76,23 @@ type BroadcastListItem struct {
 	Id             string `json:"id"`
 	Name           string `json:"name"`
 	Status         string `json:"status"`
-	AudienceId     string `json:"audienceId"`
+	AudienceId     *string `json:"audienceId"`
 	FromAddress    string `json:"fromAddress"`
 	Subject        string `json:"subject"`
 	RecipientCount int    `json:"recipientCount"`
 	SentCount      int    `json:"sentCount"`
-	ScheduledAt    string `json:"scheduledAt"`
-	StartedAt      string `json:"startedAt"`
-	CompletedAt    string `json:"completedAt"`
+	ScheduledAt    *string `json:"scheduledAt"`
+	StartedAt      *string `json:"startedAt"`
+	CompletedAt    *string `json:"completedAt"`
 	CreatedAt      string `json:"createdAt"`
-	AudienceName   string `json:"audienceName"`
+	AudienceName   *string `json:"audienceName"`
 }
 
 // SendBroadcastResponse is the response from Broadcasts.Send.
 type SendBroadcastResponse struct {
 	Id          string `json:"id"`
 	Status      string `json:"status"`
-	ScheduledAt string `json:"scheduled_at"`
+	ScheduledAt *string `json:"scheduled_at"`
 }
 
 // BroadcastsSvc is the /broadcasts API.
