@@ -47,7 +47,7 @@ type Broadcast struct {
 	Id                string            `json:"id"`
 	Name              string            `json:"name"`
 	Status            string            `json:"status"`
-	AudienceId        string            `json:"audienceId"`
+	AudienceId        *string           `json:"audienceId"`
 	FromAddress       string            `json:"fromAddress"`
 	Subject           string            `json:"subject"`
 	Html              string            `json:"html"`
@@ -70,7 +70,7 @@ type BroadcastListItem struct {
 	Id             string `json:"id"`
 	Name           string `json:"name"`
 	Status         string `json:"status"`
-	AudienceId     string `json:"audienceId"`
+	AudienceId     *string `json:"audienceId"`
 	FromAddress    string `json:"fromAddress"`
 	Subject        string `json:"subject"`
 	RecipientCount int    `json:"recipientCount"`
