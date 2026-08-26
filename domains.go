@@ -40,15 +40,23 @@ type DomainListItem struct {
 	CreatedAt string `json:"createdAt"`
 }
 
+// DomainVerification reports whether a verification chain is polling DNS for the
+// domain right now, and when that chain started.
+type DomainVerification struct {
+	Running   bool   `json:"running"`
+	StartedAt string `json:"startedAt"`
+}
+
 // Domain is the response from Domains.Get.
 type Domain struct {
-	Id            string `json:"id"`
-	Name          string `json:"name"`
-	DkimPublicKey string `json:"dkimPublicKey"`
-	DkimSelector  string `json:"dkimSelector"`
-	Status        string `json:"status"`
-	CreatedAt     string `json:"createdAt"`
-	VerifiedAt    string `json:"verifiedAt"`
+	Id            string             `json:"id"`
+	Name          string             `json:"name"`
+	DkimPublicKey string             `json:"dkimPublicKey"`
+	DkimSelector  string             `json:"dkimSelector"`
+	Status        string             `json:"status"`
+	CreatedAt     string             `json:"createdAt"`
+	VerifiedAt    string             `json:"verifiedAt"`
+	Verification  DomainVerification `json:"verification"`
 }
 
 // GenericResponse is a simple {"message": "..."} acknowledgement.
