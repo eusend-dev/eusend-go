@@ -46,6 +46,17 @@ type CreateContactRequest struct {
 	Email     string `json:"email"`
 	FirstName string `json:"first_name,omitempty"`
 	LastName  string `json:"last_name,omitempty"`
+
+	// Unsubscribed and CreatedAt are accepted by BatchCreateContacts only — they exist
+	// for migrating a list in from another provider. CreateContact rejects them.
+	//
+	// Unsubscribed marks the contact as opted out. An import can only ever ADD an
+	// opt-out: false will not re-subscribe someone who has already unsubscribed, which
+	// is a consent decision and stays on UpdateContact.
+	Unsubscribed *bool `json:"unsubscribed,omitempty"`
+	// CreatedAt is the original signup time (ISO 8601). Applied on insert only; an
+	// existing contact keeps the date it already has.
+	CreatedAt string `json:"created_at,omitempty"`
 }
 
 // UpdateContactRequest updates a contact. Nil fields are left unchanged.
@@ -72,6 +83,9 @@ type ListContactsOptions struct {
 // BatchCreateContactsResponse reports how many contacts were written.
 type BatchCreateContactsResponse struct {
 	Count int `json:"count"`
+	// Duplicates is how many repeated addresses were collapsed to reach Count, which
+	// is what explains a count lower than the number of rows sent.
+	Duplicates int `json:"duplicates"`
 }
 
 // AudiencesSvc is the /audiences API, including nested contact operations.
