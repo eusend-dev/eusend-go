@@ -83,6 +83,8 @@ const (
 	CodePlanLimitExceeded            = "PLAN_LIMIT_EXCEEDED"
 	CodeDomainNotVerified            = "DOMAIN_NOT_VERIFIED"
 	CodeSendingSuspended             = "SENDING_SUSPENDED"
+	CodeAccountRestricted            = "ACCOUNT_RESTRICTED"
+	CodeSenderNotPermitted           = "SENDER_NOT_PERMITTED"
 	CodeListSendHeld                 = "LIST_SEND_HELD"
 	CodeBroadcastHeld                = "BROADCAST_HELD"
 	CodeAllSuppressed                = "ALL_SUPPRESSED"
