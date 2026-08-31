@@ -88,6 +88,13 @@ type BatchCreateContactsResponse struct {
 	Duplicates int `json:"duplicates"`
 }
 
+// BatchDeleteContactsResponse reports how many contacts were removed. Deleted may be
+// lower than the number of ids sent -- an id may already be gone, or may belong to a
+// different audience -- so a retry after a dropped response settles at 0.
+type BatchDeleteContactsResponse struct {
+	Deleted int `json:"deleted"`
+}
+
 // AudiencesSvc is the /audiences API, including nested contact operations.
 type AudiencesSvc interface {
 	Create(params *CreateAudienceRequest) (*Audience, error)
@@ -100,6 +107,8 @@ type AudiencesSvc interface {
 	CreateContact(audienceId string, params *CreateContactRequest) (*Contact, error)
 	CreateContactWithContext(ctx context.Context, audienceId string, params *CreateContactRequest) (*Contact, error)
 	BatchCreateContacts(audienceId string, contacts []*CreateContactRequest) (*BatchCreateContactsResponse, error)
+	BatchDeleteContacts(audienceId string, contactIds []string) (*BatchDeleteContactsResponse, error)
+	BatchDeleteContactsWithContext(ctx context.Context, audienceId string, contactIds []string) (*BatchDeleteContactsResponse, error)
 	BatchCreateContactsWithContext(ctx context.Context, audienceId string, contacts []*CreateContactRequest) (*BatchCreateContactsResponse, error)
 	ListContacts(audienceId string, options *ListContactsOptions) (*ListContactsResponse, error)
 	ListContactsWithContext(ctx context.Context, audienceId string, options *ListContactsOptions) (*ListContactsResponse, error)
@@ -173,6 +182,28 @@ func (s *AudiencesSvcImpl) CreateContactWithContext(ctx context.Context, audienc
 		return nil, ErrFailedToCreateRequest
 	}
 	resp := new(Contact)
+	if _, err := s.client.Perform(req, resp); err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+// BatchDeleteContacts removes up to 1,000 contacts from an audience by id.
+//
+// This is not an unsubscribe: it removes them from the audience without adding them to
+// the suppression list. Use UpdateContact with Unsubscribed to stop mailing somebody
+// while keeping the record.
+func (s *AudiencesSvcImpl) BatchDeleteContacts(audienceId string, contactIds []string) (*BatchDeleteContactsResponse, error) {
+	return s.BatchDeleteContactsWithContext(context.Background(), audienceId, contactIds)
+}
+
+func (s *AudiencesSvcImpl) BatchDeleteContactsWithContext(ctx context.Context, audienceId string, contactIds []string) (*BatchDeleteContactsResponse, error) {
+	body := map[string]any{"contact_ids": contactIds}
+	req, err := s.client.NewRequest(ctx, http.MethodPost, "audiences/"+audienceId+"/contacts/batch-delete", body)
+	if err != nil {
+		return nil, ErrFailedToCreateRequest
+	}
+	resp := new(BatchDeleteContactsResponse)
 	if _, err := s.client.Perform(req, resp); err != nil {
 		return nil, err
 	}
