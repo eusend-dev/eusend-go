@@ -95,6 +95,24 @@ type SendBroadcastResponse struct {
 	ScheduledAt *string `json:"scheduled_at"`
 }
 
+// TestBroadcastRequest is the payload for Broadcasts.Test.
+type TestBroadcastRequest struct {
+	// To holds up to 5 addresses, each on a domain verified on your account. A test send
+	// delivers real mail without the paid-plan gate Send carries, so it is restricted to
+	// inboxes you have already proved you control; anything else returns
+	// DOMAIN_NOT_VERIFIED.
+	To []string `json:"to"`
+}
+
+// TestBroadcastResponse is the response from Broadcasts.Test.
+type TestBroadcastResponse struct {
+	Id string `json:"id"`
+	// SentTo lists the addresses actually mailed, lowercased and de-duplicated.
+	SentTo []string `json:"sent_to"`
+	// EmailIds holds one email id per recipient, for looking the delivery up in the logs.
+	EmailIds []string `json:"email_ids"`
+}
+
 // BroadcastsSvc is the /broadcasts API.
 type BroadcastsSvc interface {
 	Create(params *CreateBroadcastRequest) (*Broadcast, error)
@@ -107,6 +125,8 @@ type BroadcastsSvc interface {
 	UpdateWithContext(ctx context.Context, broadcastId string, params *UpdateBroadcastRequest) (*Broadcast, error)
 	Send(broadcastId string, params *SendBroadcastRequest) (*SendBroadcastResponse, error)
 	SendWithContext(ctx context.Context, broadcastId string, params *SendBroadcastRequest) (*SendBroadcastResponse, error)
+	Test(broadcastId string, params *TestBroadcastRequest) (*TestBroadcastResponse, error)
+	TestWithContext(ctx context.Context, broadcastId string, params *TestBroadcastRequest) (*TestBroadcastResponse, error)
 	Cancel(broadcastId string) (*Broadcast, error)
 	CancelWithContext(ctx context.Context, broadcastId string) (*Broadcast, error)
 	Remove(broadcastId string) (*GenericResponse, error)
@@ -196,6 +216,34 @@ func (s *BroadcastsSvcImpl) SendWithContext(ctx context.Context, broadcastId str
 		return nil, ErrFailedToCreateRequest
 	}
 	resp := new(SendBroadcastResponse)
+	if _, err := s.client.Perform(req, resp); err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+// Test sends a copy of the broadcast to your own verified addresses — the real message
+// through the real sending path, so it shows what a recipient will see.
+//
+// Unlike Send it works on every plan including Free. It costs daily and monthly quota like
+// any other send, and does not move the broadcast's status: the campaign stays a draft no
+// matter how many tests you send.
+//
+// Requires a LIVE api key. "Test" here means a dress rehearsal, not a sandbox — an
+// eu_test_ key is refused because the mail really is delivered.
+func (s *BroadcastsSvcImpl) Test(broadcastId string, params *TestBroadcastRequest) (*TestBroadcastResponse, error) {
+	return s.TestWithContext(context.Background(), broadcastId, params)
+}
+
+func (s *BroadcastsSvcImpl) TestWithContext(ctx context.Context, broadcastId string, params *TestBroadcastRequest) (*TestBroadcastResponse, error) {
+	if params == nil {
+		params = &TestBroadcastRequest{}
+	}
+	req, err := s.client.NewRequest(ctx, http.MethodPost, "broadcasts/"+broadcastId+"/test", params)
+	if err != nil {
+		return nil, ErrFailedToCreateRequest
+	}
+	resp := new(TestBroadcastResponse)
 	if _, err := s.client.Perform(req, resp); err != nil {
 		return nil, err
 	}
