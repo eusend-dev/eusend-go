@@ -210,6 +210,7 @@ audience, _ := client.Audiences.Create(&eusend.CreateAudienceRequest{Name: "News
 
 client.Audiences.CreateContact(audience.Id, &eusend.CreateContactRequest{
 	Email: "user@example.com", FirstName: "Jane",
+	Properties: map[string]string{"plan": "pro"}, // becomes {{plan}} in a broadcast
 })
 
 // Bulk upsert (up to 1,000)

@@ -29,15 +29,18 @@ type AudienceListItem struct {
 
 // Contact is a member of an audience.
 type Contact struct {
-	Id             string `json:"id"`
-	AudienceId     string `json:"audienceId"`
-	Email          string `json:"email"`
-	FirstName      string `json:"firstName"`
-	LastName       string `json:"lastName"`
-	Status         string `json:"status"`
-	UnsubscribedAt string `json:"unsubscribedAt"`
-	CreatedAt      string `json:"createdAt"`
-	UpdatedAt      string `json:"updatedAt"`
+	Id         string `json:"id"`
+	AudienceId string `json:"audienceId"`
+	Email      string `json:"email"`
+	FirstName  string `json:"firstName"`
+	LastName   string `json:"lastName"`
+	// Properties are the contact's custom properties, available as {{key}} in a
+	// broadcast body.
+	Properties     map[string]string `json:"properties"`
+	Status         string            `json:"status"`
+	UnsubscribedAt string            `json:"unsubscribedAt"`
+	CreatedAt      string            `json:"createdAt"`
+	UpdatedAt      string            `json:"updatedAt"`
 }
 
 // CreateContactRequest is the request object for Audiences.CreateContact and the
@@ -57,6 +60,18 @@ type CreateContactRequest struct {
 	// CreatedAt is the original signup time (ISO 8601). Applied on insert only; an
 	// existing contact keeps the date it already has.
 	CreatedAt string `json:"created_at,omitempty"`
+
+	// Properties are custom properties merged into the {{variable}} map when a
+	// broadcast renders, so {"plan": "pro"} makes {{plan}} resolve to pro.
+	//
+	// Keys are lowercase letters, digits and underscores, starting with a letter (at
+	// most 40 characters, 20 properties per contact). "email", "name", "first_name",
+	// "last_name" and "full_name" are built in and cannot be used.
+	//
+	// CreateContact REPLACES the contact's properties with these; BatchCreateContacts
+	// MERGES them, so an import carrying only "plan" will not drop a "company" an
+	// earlier import set.
+	Properties map[string]string `json:"properties,omitempty"`
 }
 
 // UpdateContactRequest updates a contact. Nil fields are left unchanged.
@@ -64,6 +79,9 @@ type UpdateContactRequest struct {
 	FirstName    *string `json:"first_name,omitempty"`
 	LastName     *string `json:"last_name,omitempty"`
 	Unsubscribed *bool   `json:"unsubscribed,omitempty"`
+	// Properties REPLACES the contact's custom properties. Nil leaves them unchanged;
+	// an empty (non-nil) map clears them.
+	Properties map[string]string `json:"properties,omitempty"`
 }
 
 // ListContactsResponse is a page of contacts.
