@@ -47,6 +47,36 @@ type DomainVerification struct {
 	StartedAt string `json:"startedAt"`
 }
 
+// DomainDnsProvider is the DNS host serving a domain's zone, recognised from its
+// nameservers. Guide is a path on eusend.dev, empty where no guide exists.
+type DomainDnsProvider struct {
+	Id    string `json:"id"`
+	Label string `json:"label"`
+	Guide string `json:"guide"`
+}
+
+// DomainDiagnostic is what the last unmatched DNS check found, when it found a
+// mistake rather than an absence. Nil while nothing is wrong beyond the records
+// not having propagated yet.
+//
+// Code is the mistake: "doubled_domain" (the record sits under the domain twice,
+// because the control panel appends it to whatever you type), "truncated_key" (the
+// value was cut at the 255-character limit for a single DNS string instead of being
+// split into two), "foreign_key" (a DKIM key we did not issue is published at the
+// selector), "quoted_value", "multiple_records", "cname_at_selector". New codes may
+// be added, so treat an unknown one as generic.
+type DomainDiagnostic struct {
+	Code string `json:"code"`
+	// FoundAt is the name the record was actually found at, for "doubled_domain".
+	FoundAt string `json:"foundAt"`
+	// PublishedChars and ExpectedChars describe a "truncated_key".
+	PublishedChars int `json:"publishedChars"`
+	ExpectedChars  int `json:"expectedChars"`
+	// Target is where the CNAME points, for "cname_at_selector".
+	Target   string             `json:"target"`
+	Provider *DomainDnsProvider `json:"provider"`
+}
+
 // Domain is the response from Domains.Get.
 type Domain struct {
 	Id            string             `json:"id"`
@@ -57,6 +87,7 @@ type Domain struct {
 	CreatedAt     string             `json:"createdAt"`
 	VerifiedAt    string             `json:"verifiedAt"`
 	Verification  DomainVerification `json:"verification"`
+	Diagnostic    *DomainDiagnostic  `json:"diagnostic"`
 }
 
 // GenericResponse is a simple {"message": "..."} acknowledgement.
