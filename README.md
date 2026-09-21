@@ -234,6 +234,30 @@ client.Audiences.List()
 client.Audiences.Remove(audience.Id)
 ```
 
+### Contact properties
+
+The custom fields your contacts carry. Declaring one is optional — a property you send on
+a contact registers itself as a string — but a declared property can have a type and a
+fallback rendered for contacts that have no value of their own.
+
+```go
+fallback := "free"
+client.ContactProperties.Create(&eusend.CreateContactPropertyRequest{
+	Key: "plan", Type: "string", FallbackValue: &fallback,
+})
+
+properties, _ := client.ContactProperties.List()
+client.ContactProperties.Get(properties[0].Id)
+
+// The fallback is the only mutable field: key and type are fixed at creation.
+client.ContactProperties.Update(properties[0].Id, &eusend.UpdateContactPropertyRequest{
+	FallbackValue: &fallback,
+})
+
+// Deletes the definition AND strips the key from every contact. Not undoable.
+client.ContactProperties.Remove(properties[0].Id)
+```
+
 ---
 
 ## Suppressions

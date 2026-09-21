@@ -47,15 +47,16 @@ type Client struct {
 	UserAgent string
 	headers   map[string]string
 
-	Emails       EmailsSvc
-	Batch        BatchSvc
-	ApiKeys      ApiKeysSvc
-	Domains      DomainsSvc
-	Audiences    AudiencesSvc
-	Templates    TemplatesSvc
-	Webhooks     WebhooksSvc
-	Broadcasts   BroadcastsSvc
-	Suppressions SuppressionsSvc
+	Emails            EmailsSvc
+	Batch             BatchSvc
+	ApiKeys           ApiKeysSvc
+	Domains           DomainsSvc
+	Audiences         AudiencesSvc
+	ContactProperties ContactPropertiesSvc
+	Templates         TemplatesSvc
+	Webhooks          WebhooksSvc
+	Broadcasts        BroadcastsSvc
+	Suppressions      SuppressionsSvc
 }
 
 // NewClient creates a Client with the given API key. If apiKey is empty, the
@@ -87,6 +88,7 @@ func NewCustomClient(httpClient *http.Client, apiKey string) *Client {
 	c.ApiKeys = &ApiKeysSvcImpl{client: c}
 	c.Domains = &DomainsSvcImpl{client: c}
 	c.Audiences = &AudiencesSvcImpl{client: c}
+	c.ContactProperties = &ContactPropertiesSvcImpl{client: c}
 	c.Templates = &TemplatesSvcImpl{client: c}
 	c.Webhooks = &WebhooksSvcImpl{client: c}
 	c.Broadcasts = &BroadcastsSvcImpl{client: c}
