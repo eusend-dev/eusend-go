@@ -53,6 +53,7 @@ type Client struct {
 	Domains           DomainsSvc
 	Audiences         AudiencesSvc
 	ContactProperties ContactPropertiesSvc
+	Topics            TopicsSvc
 	Templates         TemplatesSvc
 	Webhooks          WebhooksSvc
 	Broadcasts        BroadcastsSvc
@@ -89,6 +90,7 @@ func NewCustomClient(httpClient *http.Client, apiKey string) *Client {
 	c.Domains = &DomainsSvcImpl{client: c}
 	c.Audiences = &AudiencesSvcImpl{client: c}
 	c.ContactProperties = &ContactPropertiesSvcImpl{client: c}
+	c.Topics = &TopicsSvcImpl{client: c}
 	c.Templates = &TemplatesSvcImpl{client: c}
 	c.Webhooks = &WebhooksSvcImpl{client: c}
 	c.Broadcasts = &BroadcastsSvcImpl{client: c}

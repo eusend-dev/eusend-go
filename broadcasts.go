@@ -8,8 +8,11 @@ import (
 // CreateBroadcastRequest is the request object for Broadcasts.Create. Provide
 // either Html or TemplateId.
 type CreateBroadcastRequest struct {
-	Name              string            `json:"name"`
-	AudienceId        string            `json:"audience_id"`
+	Name       string `json:"name"`
+	AudienceId string `json:"audience_id"`
+	// TopicId narrows the audience to the contacts subscribed to that topic. Empty sends
+	// to the whole audience.
+	TopicId           string            `json:"topic_id,omitempty"`
 	From              string            `json:"from"`
 	Subject           string            `json:"subject"`
 	Html              string            `json:"html,omitempty"`
@@ -23,8 +26,11 @@ type CreateBroadcastRequest struct {
 
 // UpdateBroadcastRequest updates a broadcast. Empty/nil fields are left unchanged.
 type UpdateBroadcastRequest struct {
-	Name              *string           `json:"name,omitempty"`
-	AudienceId        *string           `json:"audience_id,omitempty"`
+	Name       *string `json:"name,omitempty"`
+	AudienceId *string `json:"audience_id,omitempty"`
+	// TopicId is nullable rather than omitempty-only: sending an explicit null clears the
+	// topic and widens the send back to the whole audience.
+	TopicId           *string           `json:"topic_id,omitempty"`
 	From              *string           `json:"from,omitempty"`
 	Subject           *string           `json:"subject,omitempty"`
 	Html              *string           `json:"html,omitempty"`
@@ -49,6 +55,7 @@ type Broadcast struct {
 	Name              string            `json:"name"`
 	Status            string            `json:"status"`
 	AudienceId        *string           `json:"audienceId"`
+	TopicId           *string           `json:"topicId"`
 	FromAddress       string            `json:"fromAddress"`
 	ReplyTo           *string           `json:"replyTo"`
 	Subject           string            `json:"subject"`
@@ -66,32 +73,34 @@ type Broadcast struct {
 	StartedAt         *string           `json:"startedAt"`
 	CompletedAt       *string           `json:"completedAt"`
 	// Stats is populated only by Broadcasts.Get.
-	Stats             map[string]int    `json:"stats"`
-	CreatedAt         string            `json:"createdAt"`
-	UpdatedAt         string            `json:"updatedAt"`
+	Stats     map[string]int `json:"stats"`
+	CreatedAt string         `json:"createdAt"`
+	UpdatedAt string         `json:"updatedAt"`
 }
 
 // BroadcastListItem is a row from Broadcasts.List.
 type BroadcastListItem struct {
-	Id             string `json:"id"`
-	Name           string `json:"name"`
-	Status         string `json:"status"`
+	Id             string  `json:"id"`
+	Name           string  `json:"name"`
+	Status         string  `json:"status"`
 	AudienceId     *string `json:"audienceId"`
-	FromAddress    string `json:"fromAddress"`
-	Subject        string `json:"subject"`
-	RecipientCount int    `json:"recipientCount"`
-	SentCount      int    `json:"sentCount"`
+	FromAddress    string  `json:"fromAddress"`
+	Subject        string  `json:"subject"`
+	RecipientCount int     `json:"recipientCount"`
+	SentCount      int     `json:"sentCount"`
 	ScheduledAt    *string `json:"scheduledAt"`
 	StartedAt      *string `json:"startedAt"`
 	CompletedAt    *string `json:"completedAt"`
-	CreatedAt      string `json:"createdAt"`
+	CreatedAt      string  `json:"createdAt"`
 	AudienceName   *string `json:"audienceName"`
+	TopicId        *string `json:"topicId"`
+	TopicName      *string `json:"topicName"`
 }
 
 // SendBroadcastResponse is the response from Broadcasts.Send.
 type SendBroadcastResponse struct {
-	Id          string `json:"id"`
-	Status      string `json:"status"`
+	Id          string  `json:"id"`
+	Status      string  `json:"status"`
 	ScheduledAt *string `json:"scheduled_at"`
 }
 
