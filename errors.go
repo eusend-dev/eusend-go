@@ -84,6 +84,7 @@ const (
 	CodeDomainNotVerified            = "DOMAIN_NOT_VERIFIED"
 	CodeSendingSuspended             = "SENDING_SUSPENDED"
 	CodeAccountRestricted            = "ACCOUNT_RESTRICTED"
+	CodeWorkspaceInactive            = "WORKSPACE_INACTIVE"
 	CodeSenderNotPermitted           = "SENDER_NOT_PERMITTED"
 	CodeListSendHeld                 = "LIST_SEND_HELD"
 	CodeBroadcastHeld                = "BROADCAST_HELD"
