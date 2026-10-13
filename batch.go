@@ -19,10 +19,21 @@ type BatchEmailResponse struct {
 	Data []BatchItemResult `json:"data"`
 }
 
+// BatchSendOptions carries per-call options for Batch.SendWithOptions.
+type BatchSendOptions struct {
+	// IdempotencyKey makes a batch safe to retry. It is applied per item by
+	// position, so a retry must keep the items in the same order.
+	IdempotencyKey string `json:"-"`
+}
+
+// GetIdempotencyKey implements the Options interface.
+func (o BatchSendOptions) GetIdempotencyKey() string { return o.IdempotencyKey }
+
 // BatchSvc is the /emails/batch API.
 type BatchSvc interface {
 	Send(params []*SendEmailRequest) (*BatchEmailResponse, error)
 	SendWithContext(ctx context.Context, params []*SendEmailRequest) (*BatchEmailResponse, error)
+	SendWithOptions(ctx context.Context, params []*SendEmailRequest, options *BatchSendOptions) (*BatchEmailResponse, error)
 }
 
 type BatchSvcImpl struct{ client *Client }
@@ -36,6 +47,10 @@ func (s *BatchSvcImpl) Send(params []*SendEmailRequest) (*BatchEmailResponse, er
 }
 
 func (s *BatchSvcImpl) SendWithContext(ctx context.Context, params []*SendEmailRequest) (*BatchEmailResponse, error) {
+	return s.SendWithOptions(ctx, params, nil)
+}
+
+func (s *BatchSvcImpl) SendWithOptions(ctx context.Context, params []*SendEmailRequest, options *BatchSendOptions) (*BatchEmailResponse, error) {
 	// Strip fields the batch endpoint rejects, without mutating the caller's structs.
 	payload := make([]SendEmailRequest, len(params))
 	for i, p := range params {
@@ -45,7 +60,11 @@ func (s *BatchSvcImpl) SendWithContext(ctx context.Context, params []*SendEmailR
 		payload[i] = item
 	}
 
-	req, err := s.client.NewRequest(ctx, http.MethodPost, "emails/batch", payload)
+	var opts Options
+	if options != nil {
+		opts = options
+	}
+	req, err := s.client.NewRequestWithOptions(ctx, http.MethodPost, "emails/batch", payload, opts)
 	if err != nil {
 		return nil, ErrFailedToCreateRequest
 	}

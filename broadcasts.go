@@ -14,6 +14,7 @@ type CreateBroadcastRequest struct {
 	// to the whole audience.
 	TopicId           string            `json:"topic_id,omitempty"`
 	From              string            `json:"from"`
+	ReplyTo           string            `json:"reply_to,omitempty"`
 	Subject           string            `json:"subject"`
 	Html              string            `json:"html,omitempty"`
 	TemplateId        string            `json:"template_id,omitempty"`
@@ -32,6 +33,7 @@ type UpdateBroadcastRequest struct {
 	// topic and widens the send back to the whole audience.
 	TopicId           *string           `json:"topic_id,omitempty"`
 	From              *string           `json:"from,omitempty"`
+	ReplyTo           *string           `json:"reply_to,omitempty"`
 	Subject           *string           `json:"subject,omitempty"`
 	Html              *string           `json:"html,omitempty"`
 	TemplateId        *string           `json:"template_id,omitempty"`

@@ -95,6 +95,14 @@ type GenericResponse struct {
 	Message string `json:"message"`
 }
 
+// RemoveDomainResponse is returned by Domains.Remove.
+type RemoveDomainResponse struct {
+	Message string `json:"message"`
+	// CanceledScheduledEmails is how many scheduled emails from the domain were
+	// canceled because it can no longer send them.
+	CanceledScheduledEmails int `json:"canceled_scheduled_emails"`
+}
+
 // DomainsSvc is the /domains API.
 type DomainsSvc interface {
 	Create(params *CreateDomainRequest) (*CreateDomainResponse, error)
@@ -105,8 +113,8 @@ type DomainsSvc interface {
 	GetWithContext(ctx context.Context, domainId string) (*Domain, error)
 	Verify(domainId string) (*GenericResponse, error)
 	VerifyWithContext(ctx context.Context, domainId string) (*GenericResponse, error)
-	Remove(domainId string) (*GenericResponse, error)
-	RemoveWithContext(ctx context.Context, domainId string) (*GenericResponse, error)
+	Remove(domainId string) (*RemoveDomainResponse, error)
+	RemoveWithContext(ctx context.Context, domainId string) (*RemoveDomainResponse, error)
 }
 
 type DomainsSvcImpl struct{ client *Client }
@@ -175,16 +183,16 @@ func (s *DomainsSvcImpl) VerifyWithContext(ctx context.Context, domainId string)
 	return resp, nil
 }
 
-func (s *DomainsSvcImpl) Remove(domainId string) (*GenericResponse, error) {
+func (s *DomainsSvcImpl) Remove(domainId string) (*RemoveDomainResponse, error) {
 	return s.RemoveWithContext(context.Background(), domainId)
 }
 
-func (s *DomainsSvcImpl) RemoveWithContext(ctx context.Context, domainId string) (*GenericResponse, error) {
+func (s *DomainsSvcImpl) RemoveWithContext(ctx context.Context, domainId string) (*RemoveDomainResponse, error) {
 	req, err := s.client.NewRequest(ctx, http.MethodDelete, "domains/"+domainId, nil)
 	if err != nil {
 		return nil, ErrFailedToCreateRequest
 	}
-	resp := new(GenericResponse)
+	resp := new(RemoveDomainResponse)
 	if _, err := s.client.Perform(req, resp); err != nil {
 		return nil, err
 	}

@@ -100,6 +100,7 @@ client.Emails.SendWithOptions(ctx, params, &eusend.SendEmailOptions{
 ```
 
 Retrying with the same key never sends a duplicate and returns the original ID.
+`Batch.SendWithOptions` takes one too — see [Batch](#batch).
 
 ### Scheduled sends
 
@@ -137,6 +138,15 @@ for _, r := range res.Data {
 }
 ```
 
+`SendWithOptions` makes a batch safe to retry. The key is applied per item by
+position, so a retry must send the items in the same order.
+
+```go
+client.Batch.SendWithOptions(ctx, emails, &eusend.BatchSendOptions{
+	IdempotencyKey: "digest-" + runID,
+})
+```
+
 ### Retrieve & list
 
 ```go
@@ -166,7 +176,8 @@ fmt.Println(created.Spf, created.Dmarc)
 client.Domains.Verify(created.Id) // after publishing the DNS records
 client.Domains.List()
 client.Domains.Get(created.Id)
-client.Domains.Remove(created.Id)
+removed, _ := client.Domains.Remove(created.Id)
+fmt.Println(removed.CanceledScheduledEmails) // scheduled emails from the domain are canceled
 ```
 
 ---
@@ -231,6 +242,8 @@ client.Audiences.GetContact(audience.Id, contact.Id)
 client.Audiences.RemoveContact(audience.Id, contact.Id)
 
 client.Audiences.List()
+client.Audiences.Get(audience.Id) // includes ContactCount
+client.Audiences.Update(audience.Id, &eusend.UpdateAudienceRequest{Name: "Product updates"})
 client.Audiences.Remove(audience.Id)
 ```
 
@@ -340,7 +353,7 @@ client.Webhooks.Remove(hook.Id)
 ```
 
 Events: `email.sent` `email.delivered` `email.bounced` `email.complained`
-`email.opened` `email.clicked`. The endpoint must be a public `http(s)` URL
+`email.opened` `email.clicked` `email.failed` `email.suppressed`. The endpoint must be a public `http(s)` URL
 returning `2xx` directly (redirects count as failures).
 
 ### Verifying signatures
@@ -376,6 +389,7 @@ bc, _ := client.Broadcasts.Create(&eusend.CreateBroadcastRequest{
 	Name:       "May newsletter",
 	AudienceId: audience.Id,
 	From:       "Sivert <hello@yourdomain.com>",
+	ReplyTo:    "support@yourdomain.com",
 	Subject:    "May update",
 	Html:       "<p>Hi {{first_name}}, your monthly update is here...</p>",
 })

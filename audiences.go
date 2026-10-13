@@ -27,6 +27,20 @@ type AudienceListItem struct {
 	ContactCount int    `json:"contactCount"`
 }
 
+// AudienceDetail is returned by Audiences.Get.
+type AudienceDetail struct {
+	Id           string `json:"id"`
+	Name         string `json:"name"`
+	CreatedAt    string `json:"createdAt"`
+	UpdatedAt    string `json:"updatedAt"`
+	ContactCount int    `json:"contactCount"`
+}
+
+// UpdateAudienceRequest is the request object for Audiences.Update.
+type UpdateAudienceRequest struct {
+	Name string `json:"name"`
+}
+
 // Contact is a member of an audience.
 type Contact struct {
 	Id         string `json:"id"`
@@ -119,6 +133,10 @@ type AudiencesSvc interface {
 	CreateWithContext(ctx context.Context, params *CreateAudienceRequest) (*Audience, error)
 	List() ([]AudienceListItem, error)
 	ListWithContext(ctx context.Context) ([]AudienceListItem, error)
+	Get(audienceId string) (*AudienceDetail, error)
+	GetWithContext(ctx context.Context, audienceId string) (*AudienceDetail, error)
+	Update(audienceId string, params *UpdateAudienceRequest) (*Audience, error)
+	UpdateWithContext(ctx context.Context, audienceId string, params *UpdateAudienceRequest) (*Audience, error)
 	Remove(audienceId string) (*GenericResponse, error)
 	RemoveWithContext(ctx context.Context, audienceId string) (*GenericResponse, error)
 
@@ -172,6 +190,39 @@ func (s *AudiencesSvcImpl) ListWithContext(ctx context.Context) ([]AudienceListI
 		return nil, err
 	}
 	return resp.Data, nil
+}
+
+func (s *AudiencesSvcImpl) Get(audienceId string) (*AudienceDetail, error) {
+	return s.GetWithContext(context.Background(), audienceId)
+}
+
+func (s *AudiencesSvcImpl) GetWithContext(ctx context.Context, audienceId string) (*AudienceDetail, error) {
+	req, err := s.client.NewRequest(ctx, http.MethodGet, "audiences/"+audienceId, nil)
+	if err != nil {
+		return nil, ErrFailedToCreateRequest
+	}
+	resp := new(AudienceDetail)
+	if _, err := s.client.Perform(req, resp); err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+// Update renames an audience.
+func (s *AudiencesSvcImpl) Update(audienceId string, params *UpdateAudienceRequest) (*Audience, error) {
+	return s.UpdateWithContext(context.Background(), audienceId, params)
+}
+
+func (s *AudiencesSvcImpl) UpdateWithContext(ctx context.Context, audienceId string, params *UpdateAudienceRequest) (*Audience, error) {
+	req, err := s.client.NewRequest(ctx, http.MethodPatch, "audiences/"+audienceId, params)
+	if err != nil {
+		return nil, ErrFailedToCreateRequest
+	}
+	resp := new(Audience)
+	if _, err := s.client.Perform(req, resp); err != nil {
+		return nil, err
+	}
+	return resp, nil
 }
 
 func (s *AudiencesSvcImpl) Remove(audienceId string) (*GenericResponse, error) {

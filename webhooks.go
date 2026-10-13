@@ -5,8 +5,10 @@ import (
 	"net/http"
 )
 
-// CreateWebhookRequest is the request object for Webhooks.Create. Pass
-// Events []string{"*"} to subscribe to every event.
+// CreateWebhookRequest is the request object for Webhooks.Create. Events are
+// email.sent, email.delivered, email.bounced, email.complained, email.opened,
+// email.clicked, email.failed and email.suppressed; pass Events []string{"*"} to
+// subscribe to every event.
 type CreateWebhookRequest struct {
 	Url    string   `json:"url"`
 	Events []string `json:"events"`

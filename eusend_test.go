@@ -182,3 +182,89 @@ func TestListContactsUnderAudience(t *testing.T) {
 		t.Fatalf("contacts wrong: %+v", page.Data)
 	}
 }
+
+func TestBatchSendWithOptionsSetsIdempotencyKey(t *testing.T) {
+	var key string
+	c, srv := newTestClient(func(w http.ResponseWriter, r *http.Request) {
+		key = r.Header.Get("Idempotency-Key")
+		_, _ = w.Write([]byte(`{"data":[{"id":"1"}]}`))
+	})
+	defer srv.Close()
+
+	in := []*SendEmailRequest{{From: "a", To: []string{"b"}}}
+	if _, err := c.Batch.SendWithOptions(context.Background(), in, &BatchSendOptions{IdempotencyKey: "digest-1"}); err != nil {
+		t.Fatalf("batch: %v", err)
+	}
+	if key != "digest-1" {
+		t.Fatalf("idempotency key not sent: %q", key)
+	}
+	if _, err := c.Batch.Send(in); err != nil {
+		t.Fatalf("batch: %v", err)
+	}
+	if key != "" {
+		t.Fatalf("plain Send should not set a key: %q", key)
+	}
+}
+
+func TestAudienceGetAndUpdate(t *testing.T) {
+	var method, path string
+	var body map[string]any
+	c, srv := newTestClient(func(w http.ResponseWriter, r *http.Request) {
+		method, path = r.Method, r.URL.Path
+		raw, _ := io.ReadAll(r.Body)
+		_ = json.Unmarshal(raw, &body)
+		_, _ = w.Write([]byte(`{"id":"aud_1","name":"Product updates","createdAt":"c","updatedAt":"u","contactCount":7}`))
+	})
+	defer srv.Close()
+
+	got, err := c.Audiences.Get("aud_1")
+	if err != nil {
+		t.Fatalf("get: %v", err)
+	}
+	if method != http.MethodGet || path != "/audiences/aud_1" || got.ContactCount != 7 || got.UpdatedAt != "u" {
+		t.Fatalf("get wrong: %s %s %+v", method, path, got)
+	}
+
+	updated, err := c.Audiences.Update("aud_1", &UpdateAudienceRequest{Name: "Product updates"})
+	if err != nil {
+		t.Fatalf("update: %v", err)
+	}
+	if method != http.MethodPatch || path != "/audiences/aud_1" || body["name"] != "Product updates" || updated.Name != "Product updates" {
+		t.Fatalf("update wrong: %s %s %v %+v", method, path, body, updated)
+	}
+}
+
+func TestBroadcastReplyToAndDomainRemoveCount(t *testing.T) {
+	var body map[string]any
+	c, srv := newTestClient(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodDelete {
+			_, _ = w.Write([]byte(`{"message":"Domain deleted","canceled_scheduled_emails":2}`))
+			return
+		}
+		raw, _ := io.ReadAll(r.Body)
+		_ = json.Unmarshal(raw, &body)
+		_, _ = w.Write([]byte(`{"id":"bc_1","replyTo":"support@example.com"}`))
+	})
+	defer srv.Close()
+
+	if _, err := c.Broadcasts.Create(&CreateBroadcastRequest{Name: "n", ReplyTo: "support@example.com"}); err != nil {
+		t.Fatalf("create: %v", err)
+	}
+	if body["reply_to"] != "support@example.com" {
+		t.Fatalf("reply_to not sent: %v", body)
+	}
+	if _, err := c.Broadcasts.Update("bc_1", &UpdateBroadcastRequest{ReplyTo: String("help@example.com")}); err != nil {
+		t.Fatalf("update: %v", err)
+	}
+	if body["reply_to"] != "help@example.com" {
+		t.Fatalf("reply_to not sent on update: %v", body)
+	}
+
+	removed, err := c.Domains.Remove("dom_1")
+	if err != nil {
+		t.Fatalf("remove: %v", err)
+	}
+	if removed.CanceledScheduledEmails != 2 {
+		t.Fatalf("count not decoded: %+v", removed)
+	}
+}
