@@ -46,10 +46,13 @@ type SendEmailRequest struct {
 	// {"category": "password_reset"}. Names and values may contain ASCII letters,
 	// numbers, underscores and dashes; up to 10 tags per email. They are returned
 	// on every email.* webhook event for this send.
-	Tags        map[string]string `json:"tags,omitempty"`
-	TrackOpens  *bool             `json:"track_opens,omitempty"`
-	TrackClicks *bool             `json:"track_clicks,omitempty"`
-	Attachments []*Attachment     `json:"attachments,omitempty"`
+	Tags map[string]string `json:"tags,omitempty"`
+	// TrackOpens/TrackClicks: nil uses the organization default, which is off unless
+	// changed. Click tracking rewrites links through eusend, which can hurt inbox
+	// placement on transactional mail.
+	TrackOpens  *bool         `json:"track_opens,omitempty"`
+	TrackClicks *bool         `json:"track_clicks,omitempty"`
+	Attachments []*Attachment `json:"attachments,omitempty"`
 	// ScheduledAt schedules the send for a future time, at most 30 days out.
 	// Accepts an ISO 8601 string or natural language ("in 1 hour", "tomorrow at
 	// 9am"), parsed server-side in UTC. Not supported by Batch.Send.

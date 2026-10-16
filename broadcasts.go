@@ -20,7 +20,7 @@ type CreateBroadcastRequest struct {
 	TemplateId        string            `json:"template_id,omitempty"`
 	TemplateVariables map[string]string `json:"template_variables,omitempty"`
 	// TrackOpens/TrackClicks are pointers so that an explicit false is sent rather than
-	// dropped by omitempty. Nil means "use the organization default".
+	// dropped by omitempty. Nil means "use the organization default" (off unless changed).
 	TrackOpens  *bool `json:"track_opens,omitempty"`
 	TrackClicks *bool `json:"track_clicks,omitempty"`
 }
