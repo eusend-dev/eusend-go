@@ -18,6 +18,9 @@ type CreateWebhookRequest struct {
 type UpdateWebhookRequest struct {
 	Url    *string  `json:"url,omitempty"`
 	Events []string `json:"events,omitempty"`
+	// Enabled set to false pauses the endpoint; true re-enables a paused or
+	// auto-disabled one.
+	Enabled *bool `json:"enabled,omitempty"`
 }
 
 // WebhookDelivery is one delivery attempt of a webhook event.
@@ -37,12 +40,22 @@ type WebhookDelivery struct {
 // Webhook is a webhook subscription. Secret is populated only by Create;
 // Deliveries only by Get.
 type Webhook struct {
-	Id         string            `json:"id"`
-	Url        string            `json:"url"`
-	Events     []string          `json:"events"`
-	Secret     string            `json:"secret,omitempty"`
-	CreatedAt  string            `json:"createdAt"`
-	Deliveries []WebhookDelivery `json:"deliveries,omitempty"`
+	Id     string   `json:"id"`
+	Url    string   `json:"url"`
+	Events []string `json:"events"`
+	Secret string   `json:"secret,omitempty"`
+	// DisabledAt is set when the endpoint stopped receiving events; nil while active.
+	DisabledAt *string `json:"disabledAt"`
+	// DisabledReason is "failing" after three days of failed deliveries, "manual" when paused.
+	DisabledReason *string           `json:"disabledReason"`
+	CreatedAt      string            `json:"createdAt"`
+	Deliveries     []WebhookDelivery `json:"deliveries,omitempty"`
+}
+
+// WebhookTestResponse is returned by Webhooks.Test.
+type WebhookTestResponse struct {
+	// Id of the test delivery, as it appears in the webhook's deliveries.
+	Id string `json:"id"`
 }
 
 // WebhooksSvc is the /webhooks API.
@@ -55,6 +68,8 @@ type WebhooksSvc interface {
 	GetWithContext(ctx context.Context, webhookId string) (*Webhook, error)
 	Update(webhookId string, params *UpdateWebhookRequest) (*Webhook, error)
 	UpdateWithContext(ctx context.Context, webhookId string, params *UpdateWebhookRequest) (*Webhook, error)
+	Test(webhookId string) (*WebhookTestResponse, error)
+	TestWithContext(ctx context.Context, webhookId string) (*WebhookTestResponse, error)
 	Remove(webhookId string) (*GenericResponse, error)
 	RemoveWithContext(ctx context.Context, webhookId string) (*GenericResponse, error)
 }
@@ -121,6 +136,23 @@ func (s *WebhooksSvcImpl) UpdateWithContext(ctx context.Context, webhookId strin
 		return nil, ErrFailedToCreateRequest
 	}
 	resp := new(Webhook)
+	if _, err := s.client.Perform(req, resp); err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+// Test sends one signed webhook.test event to the endpoint. Works on a disabled endpoint.
+func (s *WebhooksSvcImpl) Test(webhookId string) (*WebhookTestResponse, error) {
+	return s.TestWithContext(context.Background(), webhookId)
+}
+
+func (s *WebhooksSvcImpl) TestWithContext(ctx context.Context, webhookId string) (*WebhookTestResponse, error) {
+	req, err := s.client.NewRequest(ctx, http.MethodPost, "webhooks/"+webhookId+"/test", nil)
+	if err != nil {
+		return nil, ErrFailedToCreateRequest
+	}
+	resp := new(WebhookTestResponse)
 	if _, err := s.client.Perform(req, resp); err != nil {
 		return nil, err
 	}
