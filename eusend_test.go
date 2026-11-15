@@ -268,3 +268,42 @@ func TestBroadcastReplyToAndDomainRemoveCount(t *testing.T) {
 		t.Fatalf("count not decoded: %+v", removed)
 	}
 }
+
+func TestReputationGetDecodesVerdict(t *testing.T) {
+	c, srv := newTestClient(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet || !strings.HasSuffix(r.URL.Path, "/reputation") {
+			t.Errorf("request = %s %s", r.Method, r.URL.Path)
+		}
+		_, _ = w.Write([]byte(`{"state":"warning","measured":true,` +
+			`"bounce":{"rate":0.0333,"judged_rate":0.0151,"counted":4,"not_counted":2,"recipients":120,"window":"7d","limited_at":0.02,"paused_at":0.04},` +
+			`"complaint":{"rate":0,"complaints":0,"limited_at":0.0004,"paused_at":0.0008},` +
+			`"next":{"state":"limited","bounces":3}}`))
+	})
+	defer srv.Close()
+
+	r, err := c.Reputation.Get()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if r.State != ReputationWarning || r.Bounce.NotCounted != 2 || *r.Bounce.Window != "7d" {
+		t.Errorf("decoded = %+v", r)
+	}
+	if r.Next == nil || r.Next.State != ReputationLimited || *r.Next.Bounces != 3 {
+		t.Errorf("next = %+v", r.Next)
+	}
+}
+
+func TestReputationPausedHasNoNextStep(t *testing.T) {
+	c, srv := newTestClient(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte(`{"state":"paused","measured":true,"bounce":{"window":null},"complaint":{},"next":null}`))
+	})
+	defer srv.Close()
+
+	r, err := c.Reputation.Get()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if r.Next != nil || r.Bounce.Window != nil {
+		t.Errorf("paused = %+v", r)
+	}
+}

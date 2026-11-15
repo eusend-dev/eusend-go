@@ -58,6 +58,7 @@ type Client struct {
 	Webhooks          WebhooksSvc
 	Broadcasts        BroadcastsSvc
 	Suppressions      SuppressionsSvc
+	Reputation        ReputationSvc
 }
 
 // NewClient creates a Client with the given API key. If apiKey is empty, the
@@ -95,6 +96,7 @@ func NewCustomClient(httpClient *http.Client, apiKey string) *Client {
 	c.Webhooks = &WebhooksSvcImpl{client: c}
 	c.Broadcasts = &BroadcastsSvcImpl{client: c}
 	c.Suppressions = &SuppressionsSvcImpl{client: c}
+	c.Reputation = &ReputationSvcImpl{client: c}
 	return c
 }
 

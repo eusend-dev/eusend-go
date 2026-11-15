@@ -312,6 +312,23 @@ _ = page
 
 ---
 
+## Reputation
+
+Your bounce and complaint rates exactly as the sending limits judge them: what counted, what did not, and how far you are from a halved daily limit or a pause. Not available to sending-only keys.
+
+```go
+r, err := client.Reputation.Get()
+if err != nil {
+    log.Fatal(err)
+}
+fmt.Println(r.State) // healthy, warning, limited or paused
+if r.Next != nil && r.Next.Bounces != nil && *r.Next.Bounces <= 3 {
+    log.Printf("%d more bounces would move this account to %s", *r.Next.Bounces, r.Next.State)
+}
+```
+
+---
+
 ## Templates
 
 `{{variable}}` placeholders are substituted at send time; values are HTML-escaped.
