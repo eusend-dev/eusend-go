@@ -10,8 +10,8 @@ type DnsRecord struct {
 	Type        string `json:"type"`
 	Name        string `json:"name"`
 	Value       string `json:"value"`
-	Priority    int    `json:"priority,omitempty"`    // MX records only
-	Purpose     string `json:"purpose,omitempty"`     // authentication | policy | alignment
+	Priority    int    `json:"priority,omitempty"` // MX records only
+	Purpose     string `json:"purpose,omitempty"`  // authentication | policy | alignment
 	Description string `json:"description,omitempty"`
 }
 
