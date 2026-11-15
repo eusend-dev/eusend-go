@@ -2,6 +2,7 @@ package eusend
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 )
 
@@ -52,6 +53,8 @@ type TemplatesSvc interface {
 	UpdateWithContext(ctx context.Context, templateId string, params *UpdateTemplateRequest) (*Template, error)
 	Remove(templateId string) (*GenericResponse, error)
 	RemoveWithContext(ctx context.Context, templateId string) (*GenericResponse, error)
+	Preview(templateId string, variables map[string]any) (string, error)
+	PreviewWithContext(ctx context.Context, templateId string, variables map[string]any) (string, error)
 }
 
 type TemplatesSvcImpl struct{ client *Client }
@@ -136,4 +139,30 @@ func (s *TemplatesSvcImpl) RemoveWithContext(ctx context.Context, templateId str
 		return nil, err
 	}
 	return resp, nil
+}
+
+func (s *TemplatesSvcImpl) Preview(templateId string, variables map[string]any) (string, error) {
+	return s.PreviewWithContext(context.Background(), templateId, variables)
+}
+
+// PreviewWithContext renders the template with variables and returns the resulting HTML.
+func (s *TemplatesSvcImpl) PreviewWithContext(ctx context.Context, templateId string, variables map[string]any) (string, error) {
+	q := map[string]string{}
+	if variables != nil {
+		encoded, err := json.Marshal(variables)
+		if err != nil {
+			return "", err
+		}
+		q["variables"] = string(encoded)
+	}
+	req, err := s.client.NewRequest(ctx, http.MethodGet, "templates/"+templateId+"/preview"+queryString(q), nil)
+	if err != nil {
+		return "", ErrFailedToCreateRequest
+	}
+	req.Header.Set("Accept", "text/html")
+	body, err := s.client.PerformRaw(req)
+	if err != nil {
+		return "", err
+	}
+	return string(body), nil
 }

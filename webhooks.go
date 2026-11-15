@@ -37,7 +37,7 @@ type WebhookDelivery struct {
 	LastAttemptAt  string         `json:"lastAttemptAt"`
 }
 
-// Webhook is a webhook subscription. Secret is populated only by Create;
+// Webhook is a webhook subscription. Secret is populated only by Create and RotateSecret;
 // Deliveries only by Get.
 type Webhook struct {
 	Id     string   `json:"id"`
@@ -50,6 +50,11 @@ type Webhook struct {
 	DisabledReason *string           `json:"disabledReason"`
 	CreatedAt      string            `json:"createdAt"`
 	Deliveries     []WebhookDelivery `json:"deliveries,omitempty"`
+}
+
+// WebhookSecretResponse is returned by Webhooks.GetSecret.
+type WebhookSecretResponse struct {
+	Secret string `json:"secret"`
 }
 
 // WebhookTestResponse is returned by Webhooks.Test.
@@ -70,6 +75,10 @@ type WebhooksSvc interface {
 	UpdateWithContext(ctx context.Context, webhookId string, params *UpdateWebhookRequest) (*Webhook, error)
 	Test(webhookId string) (*WebhookTestResponse, error)
 	TestWithContext(ctx context.Context, webhookId string) (*WebhookTestResponse, error)
+	GetSecret(webhookId string) (*WebhookSecretResponse, error)
+	GetSecretWithContext(ctx context.Context, webhookId string) (*WebhookSecretResponse, error)
+	RotateSecret(webhookId string) (*Webhook, error)
+	RotateSecretWithContext(ctx context.Context, webhookId string) (*Webhook, error)
 	Remove(webhookId string) (*GenericResponse, error)
 	RemoveWithContext(ctx context.Context, webhookId string) (*GenericResponse, error)
 }
@@ -153,6 +162,41 @@ func (s *WebhooksSvcImpl) TestWithContext(ctx context.Context, webhookId string)
 		return nil, ErrFailedToCreateRequest
 	}
 	resp := new(WebhookTestResponse)
+	if _, err := s.client.Perform(req, resp); err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func (s *WebhooksSvcImpl) GetSecret(webhookId string) (*WebhookSecretResponse, error) {
+	return s.GetSecretWithContext(context.Background(), webhookId)
+}
+
+// GetSecretWithContext returns the endpoint's current signing secret.
+func (s *WebhooksSvcImpl) GetSecretWithContext(ctx context.Context, webhookId string) (*WebhookSecretResponse, error) {
+	req, err := s.client.NewRequest(ctx, http.MethodGet, "webhooks/"+webhookId+"/secret", nil)
+	if err != nil {
+		return nil, ErrFailedToCreateRequest
+	}
+	resp := new(WebhookSecretResponse)
+	if _, err := s.client.Perform(req, resp); err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func (s *WebhooksSvcImpl) RotateSecret(webhookId string) (*Webhook, error) {
+	return s.RotateSecretWithContext(context.Background(), webhookId)
+}
+
+// RotateSecretWithContext replaces the signing secret and returns the webhook with the new
+// Secret. It takes effect immediately: the previous secret stops verifying.
+func (s *WebhooksSvcImpl) RotateSecretWithContext(ctx context.Context, webhookId string) (*Webhook, error) {
+	req, err := s.client.NewRequest(ctx, http.MethodPost, "webhooks/"+webhookId+"/rotate-secret", nil)
+	if err != nil {
+		return nil, ErrFailedToCreateRequest
+	}
+	resp := new(Webhook)
 	if _, err := s.client.Perform(req, resp); err != nil {
 		return nil, err
 	}

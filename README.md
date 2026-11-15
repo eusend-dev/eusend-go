@@ -349,6 +349,7 @@ client.Emails.Send(&eusend.SendEmailRequest{
 client.Templates.List()
 client.Templates.Get(tpl.Id)
 client.Templates.Update(tpl.Id, &eusend.UpdateTemplateRequest{Subject: eusend.String("New subject")})
+html, _ := client.Templates.Preview(tpl.Id, map[string]any{"first_name": "Alex"}) // rendered HTML
 client.Templates.Remove(tpl.Id)
 ```
 
@@ -361,11 +362,13 @@ hook, _ := client.Webhooks.Create(&eusend.CreateWebhookRequest{
 	Url:    "https://yourapp.com/webhooks/eusend",
 	Events: []string{"email.delivered", "email.bounced", "email.complained"}, // or []string{"*"}
 })
-fmt.Println(hook.Secret) // signing secret — returned only once
+fmt.Println(hook.Secret) // signing secret — store it securely; GetSecret reads it again
 
 client.Webhooks.List()
 client.Webhooks.Get(hook.Id) // includes recent deliveries
 client.Webhooks.Update(hook.Id, &eusend.UpdateWebhookRequest{Events: []string{"email.bounced"}})
+client.Webhooks.GetSecret(hook.Id)    // current signing secret
+client.Webhooks.RotateSecret(hook.Id) // new secret, effective immediately
 client.Webhooks.Remove(hook.Id)
 ```
 
