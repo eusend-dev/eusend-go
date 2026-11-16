@@ -47,6 +47,7 @@ type UpdateBroadcastRequest struct {
 // SendBroadcastRequest sends or schedules a broadcast.
 type SendBroadcastRequest struct {
 	// ScheduledAt, when set, schedules the broadcast instead of sending immediately.
+	// ISO 8601, at most 30 days ahead.
 	ScheduledAt string `json:"scheduled_at,omitempty"`
 }
 
