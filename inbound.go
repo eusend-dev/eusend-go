@@ -11,6 +11,7 @@ const (
 	InboundActive           = "active"
 	InboundPaidPlanRequired = "paid_plan_required"
 	InboundOnHold           = "on_hold"
+	InboundDisabled         = "disabled"
 )
 
 // InboundAddress is the workspace's receiving address. Mail to any address at Host is received.
@@ -19,8 +20,9 @@ type InboundAddress struct {
 	Host string `json:"host"`
 	// Address is an example address, anything@<host>.
 	Address string `json:"address"`
-	// Status is active, paid_plan_required (the free plan) or on_hold (the account is under
-	// review; mail is deferred rather than refused).
+	// Status is active, paid_plan_required (plan does not include receiving), on_hold
+	// (account under review), or disabled (receiving disabled by admin).
+	// Held or disabled receiving defers new mail.
 	Status string `json:"status"`
 	Active bool   `json:"active"`
 }
