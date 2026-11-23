@@ -235,6 +235,7 @@ func (s *DomainsSvcImpl) EnableInbound(domainId string, params *EnableInboundReq
 
 // EnableInboundWithContext receives mail on a verified domain or a subdomain of it. It returns
 // the MX record to publish; mail starts arriving once it resolves. Not available to test keys.
+// Requires a paid plan or admin receiving grant. Disabled or held workspaces get 403 FORBIDDEN.
 func (s *DomainsSvcImpl) EnableInboundWithContext(ctx context.Context, domainId string, params *EnableInboundRequest) (*DomainInbound, error) {
 	if params == nil {
 		params = &EnableInboundRequest{}
