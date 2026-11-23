@@ -200,7 +200,7 @@ the content with `Inbound.Get`.
 addr, _ := client.Inbound.Address()
 fmt.Println(addr.Address) // anything@3e44228d8f38.eusend.app
 
-page, _ := client.Inbound.List(&eusend.ListInboundOptions{Limit: 20})
+page, _ := client.Inbound.List(&eusend.ListInboundOptions{Limit: 20, Order: "asc"})
 email, _ := client.Inbound.Get(page.Data[0].Id)
 fmt.Println(*email.Subject, email.Authentication.Dmarc.Result)
 

@@ -101,6 +101,8 @@ type InboundEmail struct {
 
 // ListInboundOptions filters Inbound.List. Zero-valued fields are omitted.
 type ListInboundOptions struct {
+	// Order is desc (newest first, default) or asc (oldest first). Keep it unchanged while paging.
+	Order string
 	// Limit is 1–100, default 10.
 	Limit  int
 	Cursor string
@@ -159,6 +161,7 @@ func (s *InboundSvcImpl) ListWithContext(ctx context.Context, options *ListInbou
 		}
 		q["cursor"] = options.Cursor
 		q["to"] = options.To
+		q["order"] = options.Order
 	}
 	req, err := s.client.NewRequest(ctx, http.MethodGet, "inbound"+queryString(q), nil)
 	if err != nil {
