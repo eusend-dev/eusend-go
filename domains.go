@@ -111,7 +111,8 @@ type DomainInbound struct {
 
 // EnableInboundRequest picks the host to receive on. Subdomain is the labels below the domain,
 // like "in" for in.example.com; leave it empty to receive on the domain itself, only when
-// nothing else handles its mail.
+// nothing else handles its mail. A host whose first label is "send" is refused with 400:
+// send.<domain> is the Return-Path host for bounces.
 type EnableInboundRequest struct {
 	Subdomain string `json:"subdomain,omitempty"`
 }
