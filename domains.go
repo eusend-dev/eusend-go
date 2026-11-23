@@ -88,6 +88,32 @@ type Domain struct {
 	VerifiedAt    string             `json:"verifiedAt"`
 	Verification  DomainVerification `json:"verification"`
 	Diagnostic    *DomainDiagnostic  `json:"diagnostic"`
+	// Inbound is receiving on this domain, or nil when it is off.
+	Inbound *DomainInbound `json:"inbound"`
+}
+
+// InboundMxRecord is the MX record to publish for a domain's inbound host.
+type InboundMxRecord struct {
+	Type     string `json:"type"`
+	Name     string `json:"name"`
+	Value    string `json:"value"`
+	Priority int    `json:"priority"`
+}
+
+// DomainInbound is receiving on a domain: the host, the record to publish, and whether it is
+// live.
+type DomainInbound struct {
+	Host   string          `json:"host"`
+	Record InboundMxRecord `json:"record"`
+	// MxPublished is whether the MX record resolves to eusend now.
+	MxPublished bool `json:"mxPublished"`
+}
+
+// EnableInboundRequest picks the host to receive on. Subdomain is the labels below the domain,
+// like "in" for in.example.com; leave it empty to receive on the domain itself, only when
+// nothing else handles its mail.
+type EnableInboundRequest struct {
+	Subdomain string `json:"subdomain,omitempty"`
 }
 
 // GenericResponse is a simple {"message": "..."} acknowledgement.
@@ -115,6 +141,10 @@ type DomainsSvc interface {
 	VerifyWithContext(ctx context.Context, domainId string) (*GenericResponse, error)
 	Remove(domainId string) (*RemoveDomainResponse, error)
 	RemoveWithContext(ctx context.Context, domainId string) (*RemoveDomainResponse, error)
+	EnableInbound(domainId string, params *EnableInboundRequest) (*DomainInbound, error)
+	EnableInboundWithContext(ctx context.Context, domainId string, params *EnableInboundRequest) (*DomainInbound, error)
+	DisableInbound(domainId string) (*GenericResponse, error)
+	DisableInboundWithContext(ctx context.Context, domainId string) (*GenericResponse, error)
 }
 
 type DomainsSvcImpl struct{ client *Client }
@@ -193,6 +223,44 @@ func (s *DomainsSvcImpl) RemoveWithContext(ctx context.Context, domainId string)
 		return nil, ErrFailedToCreateRequest
 	}
 	resp := new(RemoveDomainResponse)
+	if _, err := s.client.Perform(req, resp); err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func (s *DomainsSvcImpl) EnableInbound(domainId string, params *EnableInboundRequest) (*DomainInbound, error) {
+	return s.EnableInboundWithContext(context.Background(), domainId, params)
+}
+
+// EnableInboundWithContext receives mail on a verified domain or a subdomain of it. It returns
+// the MX record to publish; mail starts arriving once it resolves. Not available to test keys.
+func (s *DomainsSvcImpl) EnableInboundWithContext(ctx context.Context, domainId string, params *EnableInboundRequest) (*DomainInbound, error) {
+	if params == nil {
+		params = &EnableInboundRequest{}
+	}
+	req, err := s.client.NewRequest(ctx, http.MethodPut, "domains/"+domainId+"/inbound", params)
+	if err != nil {
+		return nil, ErrFailedToCreateRequest
+	}
+	resp := new(DomainInbound)
+	if _, err := s.client.Perform(req, resp); err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func (s *DomainsSvcImpl) DisableInbound(domainId string) (*GenericResponse, error) {
+	return s.DisableInboundWithContext(context.Background(), domainId)
+}
+
+// DisableInboundWithContext stops receiving mail on the domain. Mail already received is kept.
+func (s *DomainsSvcImpl) DisableInboundWithContext(ctx context.Context, domainId string) (*GenericResponse, error) {
+	req, err := s.client.NewRequest(ctx, http.MethodDelete, "domains/"+domainId+"/inbound", nil)
+	if err != nil {
+		return nil, ErrFailedToCreateRequest
+	}
+	resp := new(GenericResponse)
 	if _, err := s.client.Perform(req, resp); err != nil {
 		return nil, err
 	}

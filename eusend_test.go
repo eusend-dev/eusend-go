@@ -307,3 +307,56 @@ func TestReputationPausedHasNoNextStep(t *testing.T) {
 		t.Errorf("paused = %+v", r)
 	}
 }
+
+func TestInboundAddressGetAndAttachment(t *testing.T) {
+	c, srv := newTestClient(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/inbound/address":
+			w.Write([]byte(`{"host":"abc123.eusend.app","address":"anything@abc123.eusend.app","status":"active","active":true}`))
+		case "/inbound/ie_1":
+			w.Write([]byte(`{"id":"ie_1","from":"Alice <a@x.test>","to":["s@abc123.eusend.app"],"cc":[],"replyTo":[],"receivedFor":["s@abc123.eusend.app"],"subject":"Hi","replyToEmailId":"em_9","text":"hello","html":null,"headers":[],"attachments":[{"index":0,"filename":"a.pdf","contentType":"application/pdf","size":3,"contentId":null,"disposition":"attachment"}],"authentication":{"dmarc":{"result":"pass"},"dkim":[{"result":"pass"}]},"size":120,"createdAt":"2026-11-23T07:00:00Z"}`))
+		case "/inbound/ie_1/attachments/0":
+			w.Header().Set("Content-Type", "application/pdf")
+			w.Write([]byte("PDF"))
+		default:
+			t.Fatalf("unexpected path %s", r.URL.Path)
+		}
+	})
+	defer srv.Close()
+
+	addr, err := c.Inbound.Address()
+	if err != nil || addr.Host != "abc123.eusend.app" || !addr.Active {
+		t.Fatalf("address: %+v %v", addr, err)
+	}
+	email, err := c.Inbound.Get("ie_1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if *email.ReplyToEmailId != "em_9" || email.Authentication.Dmarc.Result != "pass" || email.Attachments[0].Size != 3 {
+		t.Fatalf("get: %+v", email)
+	}
+	body, err := c.Inbound.Attachment("ie_1", 0)
+	if err != nil || string(body) != "PDF" {
+		t.Fatalf("attachment: %q %v", body, err)
+	}
+}
+
+func TestEnableInboundSendsSubdomain(t *testing.T) {
+	c, srv := newTestClient(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPut || r.URL.Path != "/domains/d_1/inbound" {
+			t.Fatalf("unexpected %s %s", r.Method, r.URL.Path)
+		}
+		var body map[string]string
+		json.NewDecoder(r.Body).Decode(&body)
+		if body["subdomain"] != "in" {
+			t.Fatalf("body %v", body)
+		}
+		w.Write([]byte(`{"host":"in.x.test","record":{"type":"MX","name":"in.x.test","value":"inbound.eusend.dev","priority":10},"mxPublished":false}`))
+	})
+	defer srv.Close()
+
+	res, err := c.Domains.EnableInbound("d_1", &EnableInboundRequest{Subdomain: "in"})
+	if err != nil || res.Record.Value != "inbound.eusend.dev" || res.MxPublished {
+		t.Fatalf("enable: %+v %v", res, err)
+	}
+}

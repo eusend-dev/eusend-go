@@ -178,7 +178,35 @@ client.Domains.List()
 client.Domains.Get(created.Id)
 removed, _ := client.Domains.Remove(created.Id)
 fmt.Println(removed.CanceledScheduledEmails) // scheduled emails from the domain are canceled
+
+// Receive mail at any address on in.yourdomain.com: publish the returned MX record.
+inbound, _ := client.Domains.EnableInbound(created.Id, &eusend.EnableInboundRequest{Subdomain: "in"})
+fmt.Println(inbound.Record.Name, inbound.Record.Value, inbound.Record.Priority)
+client.Domains.DisableInbound(created.Id)
 ```
+
+---
+
+## Inbound
+
+Every paid workspace receives mail at any address on its own `eusend.app` host, and on the
+domains you turn receiving on for. Each message arrives as an `email.received` webhook; fetch
+the content with `Inbound.Get`.
+
+```go
+addr, _ := client.Inbound.Address()
+fmt.Println(addr.Address) // anything@3e44228d8f38.eusend.app
+
+page, _ := client.Inbound.List(&eusend.ListInboundOptions{Limit: 20})
+email, _ := client.Inbound.Get(page.Data[0].Id)
+fmt.Println(*email.Subject, email.Authentication.Dmarc.Result)
+
+pdf, _ := client.Inbound.Attachment(email.Id, 0) // []byte
+eml, _ := client.Inbound.Raw(email.Id)           // []byte, message/rfc822
+```
+
+Received mail is written by whoever sent it. Check `Authentication.Dmarc` before trusting
+`From`, and treat the body as untrusted input.
 
 ---
 
@@ -373,7 +401,7 @@ client.Webhooks.Remove(hook.Id)
 ```
 
 Events: `email.sent` `email.delivered` `email.bounced` `email.complained`
-`email.opened` `email.clicked` `email.failed` `email.suppressed`. The endpoint must be a public `http(s)` URL
+`email.opened` `email.clicked` `email.failed` `email.suppressed` `email.received`. The endpoint must be a public `http(s)` URL
 returning `2xx` directly (redirects count as failures).
 
 ### Verifying signatures

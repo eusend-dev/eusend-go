@@ -59,6 +59,7 @@ type Client struct {
 	Broadcasts        BroadcastsSvc
 	Suppressions      SuppressionsSvc
 	Reputation        ReputationSvc
+	Inbound           InboundSvc
 }
 
 // NewClient creates a Client with the given API key. If apiKey is empty, the
@@ -97,6 +98,7 @@ func NewCustomClient(httpClient *http.Client, apiKey string) *Client {
 	c.Broadcasts = &BroadcastsSvcImpl{client: c}
 	c.Suppressions = &SuppressionsSvcImpl{client: c}
 	c.Reputation = &ReputationSvcImpl{client: c}
+	c.Inbound = &InboundSvcImpl{client: c}
 	return c
 }
 
