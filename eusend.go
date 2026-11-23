@@ -24,7 +24,7 @@ import (
 )
 
 const (
-	version     = "0.20.1"
+	version     = "0.20.2"
 	userAgent   = "eusend-go/" + version
 	contentType = "application/json"
 )
