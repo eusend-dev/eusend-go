@@ -189,6 +189,9 @@ client.Domains.DisableInbound(created.Id)
 
 ## Inbound
 
+Custom receiving MX records are monitored every five minutes. The workspace owner is emailed
+on discovery, confirmed loss, and restoration. Temporary DNS failures do not trigger loss notices.
+
 Every paid workspace receives mail at any address on its own `eusend.app` host, and on the
 domains you turn receiving on for. Each message arrives as an `email.received` webhook; fetch
 the content with `Inbound.Get`.
